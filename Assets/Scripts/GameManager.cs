@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,11 +6,17 @@ public class GameManager : MonoBehaviour
 {
     public int turn = 0;
     public GameObject[] circle;
+    public GameObject[] fieldObject;
     public int[] field;
     public int[] player1_Arr;
     public int[] player2_Arr;
     int[] playersCount;
-    int[ , ] victoryCases;
+    int[,] victoryCases;
+    public Item[] player1_Items;
+    public Item[] player2_Items;
+    bool isUsingItem = false;
+    bool isUsedItem = false;
+    int curItemIndex;
 
     public UIManager uiManager;
 
@@ -20,7 +25,7 @@ public class GameManager : MonoBehaviour
         field = new int[36];
         player1_Arr = new int[36];
         player2_Arr = new int[36];
-        victoryCases = new int[ , ] {
+        victoryCases = new int[,] {
             { 0, 1, 2, 3, 4, 5 },
             { 6, 7, 8, 9, 10, 11 },
             { 12, 13, 14, 15, 16, 17 },
@@ -36,7 +41,15 @@ public class GameManager : MonoBehaviour
             { 0, 7, 14, 21, 28, 35 },
             { 5, 10, 15, 20, 25, 30 },
             };
-            playersCount = new int[2];
+        playersCount = new int[2];
+
+        for (int i = 0; i < 3; ++i)
+        {
+            int ranType = Random.Range(0, 4);
+            player1_Items[i].itemType = (Item.Type)ranType;
+            ranType = Random.Range(0, 4);
+            player2_Items[i].itemType = (Item.Type)ranType;
+        }
     }
 
     void Update()
@@ -52,24 +65,58 @@ public class GameManager : MonoBehaviour
             RaycastHit hit;
             if (Physics.Raycast(ray, out hit))
             {
-                if (hit.transform.tag == "Floor")
+                int curPlayer = turn % 2;
+                int index = -1;
+                if (!isUsingItem)
                 {
-                    int curPlayer =  turn % 2;
-                    int index = int.Parse(hit.transform.name.Split('_')[1]);
-                    if (field[index] == 0)
+                    if (hit.transform.tag == "Floor")
                     {
-                        Vector3 clickPos = hit.transform.position;
-                        Instantiate(circle[curPlayer], clickPos, Quaternion.identity);
-                        field[index] = curPlayer + 1;
-                        if (curPlayer == 0) player1_Arr.SetValue(1, index);
-                        else player2_Arr.SetValue(1, index);
-                        ++playersCount[curPlayer];
-
-                        if (playersCount[curPlayer] > 5)
+                        index = int.Parse(hit.transform.name.Split('_')[1]);
+                        if (field[index] == 0)
                         {
-                            CheckVictory(curPlayer);
+                            Vector3 clickPos = hit.transform.position;
+                            GameObject instCircle = Instantiate(circle[curPlayer], clickPos, Quaternion.identity);
+                            instCircle.transform.SetParent(hit.transform);
+                            field[index] = curPlayer + 1;
+                            if (curPlayer == 0) player1_Arr.SetValue(1, index);
+                            else player2_Arr.SetValue(1, index);
+                            ++playersCount[curPlayer];
+                            isUsedItem = false;
+                            uiManager.ChangeItems(curPlayer);
+
+                            if (playersCount[curPlayer] > 5)
+                            {
+                                CheckVictory(curPlayer);
+                            }
+                            ++turn;
                         }
-                        ++turn;
+                    }
+                }
+                else
+                {
+                    if (hit.transform.tag == "Floor" || hit.transform.tag == "Circle")
+                    {
+                        if (hit.transform.tag == "Floor")
+                        {
+                            index = int.Parse(hit.transform.name.Split('_')[1]);
+                        }
+                        else if (hit.transform.tag == "Circle")
+                        {
+                            index = int.Parse(hit.transform.parent.parent.name.Split('_')[1]);
+                        }
+
+                        if (curPlayer == 0)
+                        {
+                            player1_Items[curItemIndex].OnAblity(index);
+                            UseItem(curItemIndex);
+                            UsedItem(curItemIndex);
+                        }
+                        else if (curPlayer == 1)
+                        {
+                            player2_Items[curItemIndex].OnAblity(index);
+                            UseItem(curItemIndex);
+                            UsedItem(curItemIndex);
+                        }
                     }
                 }
             }
@@ -84,8 +131,8 @@ public class GameManager : MonoBehaviour
         {
             for (int j = 0; j < 6; ++j)
             {
-                if(curArr[victoryCases[i, j]] == 1) victory = true;
-                else 
+                if (curArr[victoryCases[i, j]] == 1) victory = true;
+                else
                 {
                     victory = false;
                     break;
@@ -99,5 +146,24 @@ public class GameManager : MonoBehaviour
             uiManager.GameEnd();
             Debug.Log("플레이어" + curPlayer + " 승!");
         }
+    }
+
+    public void UseItem(int index)
+    {
+        if (isUsedItem) return;
+        if (isUsingItem && curItemIndex != index)
+        {
+            isUsingItem = !isUsingItem;
+            uiManager.UsingItem(curItemIndex, isUsingItem);
+        }
+        isUsingItem = !isUsingItem;
+        curItemIndex = index;
+        uiManager.UsingItem(index, isUsingItem);
+    }
+
+    void UsedItem(int index)
+    {
+        isUsedItem = true;
+        uiManager.UsedItem(index);
     }
 }

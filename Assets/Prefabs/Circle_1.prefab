@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 8588106549348564337}
   m_Layer: 0
   m_Name: White
-  m_TagString: Untagged
+  m_TagString: Circle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -154,7 +154,7 @@ GameObject:
   - component: {fileID: 3885163338359931591}
   m_Layer: 0
   m_Name: Color
-  m_TagString: Untagged
+  m_TagString: Circle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
