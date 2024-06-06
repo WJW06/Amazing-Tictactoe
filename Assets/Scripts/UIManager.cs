@@ -8,6 +8,7 @@ public class UIManager : MonoBehaviour
     public GameObject playGround;
     public Button start_Button;
     public Button restart_Button;
+    public Button[] Item_Buttons;
 
     void Awake()
     {
@@ -19,11 +20,19 @@ public class UIManager : MonoBehaviour
     {
         playGround.SetActive(true);
         start_Button.gameObject.SetActive(false);
+        foreach (Button button in Item_Buttons)
+        {
+            button.gameObject.SetActive(true);
+        }
     }
 
     public void GameEnd()
     {
         restart_Button.gameObject.SetActive(true);
+        foreach (Button button in Item_Buttons)
+        {
+            button.gameObject.SetActive(false);
+        }
     }
 
     public void GameRestart()
