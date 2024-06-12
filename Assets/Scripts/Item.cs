@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 public class Item : MonoBehaviour
@@ -52,9 +53,9 @@ public class Item : MonoBehaviour
                 gameManager.field[index + 1] = 0;
                 Destroy(gameManager.fieldObject[index + 1].transform.GetChild(0).gameObject);
             }
-            StartCoroutine(ChangeFieldColor(index - 1));
-            StartCoroutine(ChangeFieldColor(index));
-            StartCoroutine(ChangeFieldColor(index + 1));
+            if (index > -1 && index < 36) StartCoroutine(ChangeFieldColor(index - 1));
+            if (index > -1 && index < 36) StartCoroutine(ChangeFieldColor(index));
+            if (index > -1 && index < 36) StartCoroutine(ChangeFieldColor(index + 1));
         }
     }
 
@@ -88,11 +89,11 @@ public class Item : MonoBehaviour
                 gameManager.field[index + 2] = 0;
                 Destroy(gameManager.fieldObject[index + 2].transform.GetChild(0).gameObject);
             }
-            StartCoroutine(ChangeFieldColor(index - 2));
-            StartCoroutine(ChangeFieldColor(index - 1));
-            StartCoroutine(ChangeFieldColor(index));
-            StartCoroutine(ChangeFieldColor(index + 1));
-            StartCoroutine(ChangeFieldColor(index + 2));
+            if (index > -1 && index < 36) StartCoroutine(ChangeFieldColor(index - 2));
+            if (index > -1 && index < 36) StartCoroutine(ChangeFieldColor(index - 1));
+            if (index > -1 && index < 36) StartCoroutine(ChangeFieldColor(index));
+            if (index > -1 && index < 36) StartCoroutine(ChangeFieldColor(index + 1));
+            if (index > -1 && index < 36) StartCoroutine(ChangeFieldColor(index + 2));
         }
     }
 
@@ -120,13 +121,16 @@ public class Item : MonoBehaviour
                 gameManager.field[index] = 0;
                 Destroy(gameManager.fieldObject[index].transform.GetChild(0).gameObject);
             }
-            StartCoroutine(ChangeFieldColor(index));
+            if (index > -1 && index < 36) StartCoroutine(ChangeFieldColor(index));
         }
     }
 
     void ReverseCardAblity(int location)
     {
-
+        if (gameManager.field[location] != 0)
+        {
+            gameManager.ChangeCircle(location);
+        }
     }
 
     IEnumerator ChangeFieldColor(int index)

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEditor.FilePathAttribute;
 
 public class GameManager : MonoBehaviour
 {
@@ -143,7 +144,7 @@ public class GameManager : MonoBehaviour
 
         if (victory)
         {
-            uiManager.GameEnd();
+            uiManager.GameEnd(curPlayer);
             Debug.Log("플레이어" + curPlayer + " 승!");
         }
     }
@@ -165,5 +166,25 @@ public class GameManager : MonoBehaviour
     {
         isUsedItem = true;
         uiManager.UsedItem(index);
+    }
+
+    public void ChangeCircle(int index)
+    {
+        Destroy(fieldObject[index].transform.GetChild(0).gameObject);
+        int curPlayer = turn % 2;
+        GameObject instCircle = Instantiate(circle[curPlayer], fieldObject[index].transform.position, Quaternion.identity);
+        instCircle.transform.SetParent(fieldObject[index].transform);
+        field[index] = field[index] == 1 ? 2 : 1;
+        if (curPlayer == 0)
+        {
+            player1_Arr[index] = 1;
+            player2_Arr[index] = 0;
+        }
+        else
+        {
+            player1_Arr[index] = 0;
+            player2_Arr[index] = 1;
+        }
+        CheckVictory(curPlayer);
     }
 }

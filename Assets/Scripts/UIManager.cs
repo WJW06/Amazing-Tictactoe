@@ -12,7 +12,8 @@ public class UIManager : MonoBehaviour
     public Image[] enemyItems;
     public Sprite[] itemSprite;
     public GameManager gameManager;
-
+    public Image messageBanner;
+    public Text messageText;
 
     public void GameStart()
     {
@@ -26,13 +27,18 @@ public class UIManager : MonoBehaviour
         ChangeItems(1);
     }
 
-    public void GameEnd()
+    public void GameEnd(int winner)
     {
         restart_Button.gameObject.SetActive(true);
         foreach (Button button in item_Buttons)
         {
             button.gameObject.SetActive(false);
         }
+        messageBanner.gameObject.SetActive(true);
+        string winPlayer;
+        if (winner == 0) winPlayer = "Player1 Win!";
+        else winPlayer = "Player2 Win!";
+        messageText.text = winPlayer;
     }
 
     public void GameRestart()
@@ -42,6 +48,7 @@ public class UIManager : MonoBehaviour
         {
             circle.SetActive(false);
         }
+        messageBanner.gameObject.SetActive(false);
         playGround.SetActive(false);
         start_Button.gameObject.SetActive(true);
         restart_Button.gameObject.SetActive(false);
