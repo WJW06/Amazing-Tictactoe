@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using static UnityEditor.FilePathAttribute;
 
@@ -18,6 +20,7 @@ public class GameManager : MonoBehaviour
     bool isUsingItem = false;
     bool isUsedItem = false;
     int curItemIndex;
+    int curDecalIndex = -1;
 
     public UIManager uiManager;
 
@@ -46,9 +49,9 @@ public class GameManager : MonoBehaviour
 
         for (int i = 0; i < 3; ++i)
         {
-            int ranType = Random.Range(0, 4);
+            int ranType = UnityEngine.Random.Range(0, 4);
             player1_Items[i].itemType = (Item.Type)ranType;
-            ranType = Random.Range(0, 4);
+            ranType = UnityEngine.Random.Range(0, 4);
             player2_Items[i].itemType = (Item.Type)ranType;
         }
     }
@@ -56,6 +59,7 @@ public class GameManager : MonoBehaviour
     void Update()
     {
         ClickFeild();
+        DecalField();
     }
 
     void ClickFeild()
@@ -160,6 +164,7 @@ public class GameManager : MonoBehaviour
         isUsingItem = !isUsingItem;
         curItemIndex = index;
         uiManager.UsingItem(index, isUsingItem);
+        ClearFieldDecal();
     }
 
     void UsedItem(int index)
@@ -186,5 +191,164 @@ public class GameManager : MonoBehaviour
             player2_Arr[index] = 1;
         }
         CheckVictory(curPlayer);
+    }
+
+    void DecalField()
+    {
+        if (!isUsingItem) return;
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit))
+        {
+            int index = -1;
+            if (hit.transform.tag == "Floor" || hit.transform.tag == "Circle")
+            {
+                if (hit.transform.tag == "Floor")
+                {
+                    index = int.Parse(hit.transform.name.Split('_')[1]);
+                }
+                else if (hit.transform.tag == "Circle")
+                {
+                    index = int.Parse(hit.transform.parent.parent.name.Split('_')[1]);
+                }
+
+                if (curDecalIndex != index && curDecalIndex != -1) ClearFieldDecal();
+                curDecalIndex = index;
+
+                if (turn % 2 == 0)
+                {
+                    switch (player1_Items[curItemIndex].itemType)
+                    {
+                        case Item.Type.Hammer:
+                            HammerDecal(index);
+                            break;
+                        case Item.Type.Grenade:
+                            GrenadeDecal(index);
+                            break;
+                        case Item.Type.Shotgun:
+                            ShotgunDecal(index);
+                            break;
+                        case Item.Type.ReverseCard:
+                            ReverseCardDecal(index);
+                            break;
+                    }
+                }
+                else
+                {
+                    switch (player2_Items[curItemIndex].itemType)
+                    {
+                        case Item.Type.Hammer:
+                            HammerDecal(index);
+                            break;
+                        case Item.Type.Grenade:
+                            GrenadeDecal(index);
+                            break;
+                        case Item.Type.Shotgun:
+                            ShotgunDecal(index);
+                            break;
+                        case Item.Type.ReverseCard:
+                            ReverseCardDecal(index);
+                            break;
+                    }
+                }
+            }
+        }
+    }
+
+    void HammerDecal(int location)
+    {
+        for (int i = -1; i < 2; ++i)
+        {
+            int index = location + (6 * i);
+            MeshRenderer fieldColor;
+            if (index - 1 > -1 && index - 1 < 36 && index % 6 > 0)
+            {
+                fieldColor = fieldObject[index - 1].GetComponent<MeshRenderer>();
+                fieldColor.material.color = Color.blue;
+            }
+            if (index > -1 && index < 36)
+            {
+                fieldColor = fieldObject[index].GetComponent<MeshRenderer>();
+                fieldColor.material.color = Color.blue;
+            }
+            if (index + 1 > 0 && index + 1 < 36 && index % 6 < 5)
+            {
+                fieldColor = fieldObject[index + 1].GetComponent<MeshRenderer>();
+                fieldColor.material.color = Color.blue;
+            }
+        }
+    }
+
+    void GrenadeDecal(int location)
+    {
+        for (int i = -2; i < 3; ++i)
+        {
+            int index = location + (6 * i);
+            MeshRenderer fieldColor;
+            if (index - 2 > -1 && index - 2 < 36 && index % 6 > 1)
+            {
+                fieldColor = fieldObject[index - 2].GetComponent<MeshRenderer>();
+                fieldColor.material.color = Color.blue;
+            }
+            if (index - 1 > -1 && index - 1 < 36 && index % 6 > 0)
+            {
+                fieldColor = fieldObject[index - 1].GetComponent<MeshRenderer>();
+                fieldColor.material.color = Color.blue;
+            }
+            if (index > -1 && index < 36)
+            {
+                fieldColor = fieldObject[index].GetComponent<MeshRenderer>();
+                fieldColor.material.color = Color.blue;
+            }
+            if (index + 1 > 0 && index + 1 < 36 && index % 6 < 5)
+            {
+                fieldColor = fieldObject[index + 1].GetComponent<MeshRenderer>();
+                fieldColor.material.color = Color.blue;
+            }
+            if (index + 2 > 1 && index + 2 < 36 && index % 6 < 4)
+            {
+                fieldColor = fieldObject[index + 2].GetComponent<MeshRenderer>();
+                fieldColor.material.color = Color.blue;
+            }
+        }
+    }
+
+    void ShotgunDecal(int location)
+    {
+        for (int i = -1; i < 2; ++i)
+        {
+            int index = location + (6 * i);
+            MeshRenderer fieldColor;
+            if (index - 1 > -1 && index - 1 < 36 && index % 6 > 0)
+            {
+                fieldColor = fieldObject[index - 1].GetComponent<MeshRenderer>();
+                fieldColor.material.color = Color.blue;
+            }
+            if (index > -1 && index < 36)
+            {
+                fieldColor = fieldObject[index].GetComponent<MeshRenderer>();
+                fieldColor.material.color = Color.blue;
+            }
+            if (index + 1 > 0 && index + 1 < 36 && index % 6 < 5)
+            {
+                fieldColor = fieldObject[index + 1].GetComponent<MeshRenderer>();
+                fieldColor.material.color = Color.blue;
+            }
+        }
+    }
+
+    void ReverseCardDecal(int location)
+    {
+        MeshRenderer fieldColor = fieldObject[location].GetComponent<MeshRenderer>(); ;
+        fieldColor.material.color = Color.blue;
+    }
+
+    void ClearFieldDecal()
+    {
+        foreach (GameObject field in fieldObject)
+        {
+            MeshRenderer fieldColor = field.GetComponent<MeshRenderer>();
+            fieldColor.material.color = Color.white;
+        }
     }
 }

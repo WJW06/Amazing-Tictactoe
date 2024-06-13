@@ -17,27 +17,27 @@ public class Item : MonoBehaviour
         switch (itemType)
         {
             case Type.Hammer:
-                HammerAblity(location);
+                HammerAbility(location);
                 break;
             case Type.Grenade:
-                GrenadeAblity(location);
+                GrenadeAbility(location);
                 break;
             case Type.Shotgun:
-                ShotgunAblity(location);
+                ShotgunAbility(location);
                 break;
             case Type.ReverseCard:
-                ReverseCardAblity(location);
+                ReverseCardAbility(location);
                 break;
         }
         isUsed = true;
     }
 
-    void HammerAblity(int location)
+    void HammerAbility(int location)
     {
         for (int i = -1; i < 2; ++i)
         {
             int index = location + (6 * i);
-            if (index - 1 > -1 && index - 1 < 36 && gameManager.field[index - 1] != 0)
+            if (index - 1 > -1 && index - 1 < 36 && index % 6 > 0 && gameManager.field[index - 1] != 0)
             {
                 gameManager.field[index - 1] = 0;
                 Destroy(gameManager.fieldObject[index - 1].transform.GetChild(0).gameObject);
@@ -48,7 +48,7 @@ public class Item : MonoBehaviour
                 Destroy(gameManager.fieldObject[index].transform.GetChild(0).gameObject);
             }
 
-            if (index + 1 > -1 && index + 1 < 36 && gameManager.field[index + 1] != 0)
+            if (index + 1 > 0 && index + 1 < 36 && index % 6 < 5 && gameManager.field[index + 1] != 0)
             {
                 gameManager.field[index + 1] = 0;
                 Destroy(gameManager.fieldObject[index + 1].transform.GetChild(0).gameObject);
@@ -59,17 +59,17 @@ public class Item : MonoBehaviour
         }
     }
 
-    void GrenadeAblity(int location)
+    void GrenadeAbility(int location)
     {
         for (int i = -2; i < 3; ++i)
         {
             int index = location + (6 * i);
-            if (index - 1 > -1 && index - 2 < 36 && gameManager.field[index - 2] != 0)
+            if (index - 1 > -1 && index - 2 < 36 && index % 6 > 1 && gameManager.field[index - 2] != 0)
             {
                 gameManager.field[index - 2] = 0;
                 Destroy(gameManager.fieldObject[index - 2].transform.GetChild(0).gameObject);
             }
-            if (index - 1 > -1 && index - 1 < 36 && gameManager.field[index - 1] != 0)
+            if (index - 1 > -1 && index - 1 < 36 && index % 6 > 0 && gameManager.field[index - 1] != 0)
             {
                 gameManager.field[index - 1] = 0;
                 Destroy(gameManager.fieldObject[index - 1].transform.GetChild(0).gameObject);
@@ -79,12 +79,12 @@ public class Item : MonoBehaviour
                 gameManager.field[index] = 0;
                 Destroy(gameManager.fieldObject[index].transform.GetChild(0).gameObject);
             }
-            if (index + 1 > -1 && index + 1 < 36 && gameManager.field[index + 1] != 0)
+            if (index + 1 > 0 && index + 1 < 36 && index % 6 < 5 && gameManager.field[index + 1] != 0)
             {
                 gameManager.field[index + 1] = 0;
                 Destroy(gameManager.fieldObject[index + 1].transform.GetChild(0).gameObject);
             }
-            if (index + 2 > -1 && index + 2 < 36 && gameManager.field[index + 2] != 0)
+            if (index + 2 > 1 && index + 2 < 36 && index % 6 < 4 && gameManager.field[index + 2] != 0)
             {
                 gameManager.field[index + 2] = 0;
                 Destroy(gameManager.fieldObject[index + 2].transform.GetChild(0).gameObject);
@@ -97,13 +97,17 @@ public class Item : MonoBehaviour
         }
     }
 
-    void ShotgunAblity(int location)
+    void ShotgunAbility(int location)
     {
         int[] indexs = new int[3];
         for (int i = 0; i < 3; ++i)
         {
-            int ranV = UnityEngine.Random.Range(-1, 2);
             int ranH = UnityEngine.Random.Range(-1, 2);
+            int ranV;
+            if (location % 6 < 1) ranV = UnityEngine.Random.Range(0, 2);
+            else if (location % 6 > 4) ranV = UnityEngine.Random.Range(-1, 1);
+            else ranV = UnityEngine.Random.Range(-1, 2);
+
             int index = location + (6 * ranV) + ranH;
 
             if (Array.IndexOf(indexs, index) == -1)
@@ -125,7 +129,7 @@ public class Item : MonoBehaviour
         }
     }
 
-    void ReverseCardAblity(int location)
+    void ReverseCardAbility(int location)
     {
         if (gameManager.field[location] != 0)
         {
@@ -135,6 +139,7 @@ public class Item : MonoBehaviour
 
     IEnumerator ChangeFieldColor(int index)
     {
+        yield return new WaitForEndOfFrame();
         MeshRenderer fieldColor = gameManager.fieldObject[index].GetComponent<MeshRenderer>();
 
         fieldColor.material.color = Color.red;
