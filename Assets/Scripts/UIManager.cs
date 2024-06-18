@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -14,17 +15,39 @@ public class UIManager : MonoBehaviour
     public GameManager gameManager;
     public Image messageBanner;
     public Text messageText;
+    public Text timeText;
+    public Image playerColor;
+    Color player1_Color = new Color(255, 0, 0);
+    Color player2_Color = new Color(0, 100, 255);
+    float time;
+
+    void Update()
+    {
+        if (gameManager.isPlaying)
+        {
+            time += Time.deltaTime;
+            int min = Mathf.FloorToInt(time / 60);
+            int sec = Mathf.FloorToInt(time % 60);
+            timeText.text = string.Format("Time: {0:D2}:{1:D2}", min, sec);
+        }
+    }
 
     public void GameStart()
     {
+        gameManager.InitField();
         playGround.SetActive(true);
+        timeText.gameObject.SetActive(true);
+        playerColor.gameObject.SetActive(true);
         start_Button.gameObject.SetActive(false);
         for (int i = 0; i < 3; ++i)
         {
+            SetItemImage(0, i);
+            SetItemImage(1, i);
             item_Buttons[i].gameObject.SetActive(true);
             enemyItems[i].gameObject.SetActive(true);
         }
-        ChangeItems(1);
+        ChangeUI(1);
+        time = 0;
     }
 
     public void GameEnd(int winner)
@@ -34,11 +57,16 @@ public class UIManager : MonoBehaviour
         {
             button.gameObject.SetActive(false);
         }
+        foreach (Image enemyItem in enemyItems)
+        {
+            enemyItem.gameObject.SetActive(false);
+        }
         messageBanner.gameObject.SetActive(true);
         string winPlayer;
         if (winner == 0) winPlayer = "Player1 Win!";
         else winPlayer = "Player2 Win!";
         messageText.text = winPlayer;
+        gameManager.isPlaying = false;
     }
 
     public void GameRestart()
@@ -49,20 +77,36 @@ public class UIManager : MonoBehaviour
             circle.SetActive(false);
         }
         messageBanner.gameObject.SetActive(false);
-        playGround.SetActive(false);
+        timeText.gameObject.SetActive(false);
+        playerColor.gameObject.SetActive(false);
         start_Button.gameObject.SetActive(true);
         restart_Button.gameObject.SetActive(false);
+        playGround.SetActive(false);
     }
 
-    public void ChangeItems(int curPlayer)
+    public void SetItemImage(int curPlayer, int index)
     {
+        Image buttonImg;
+        Item player = curPlayer == 0 ? gameManager.player1_Items[index] : gameManager.player2_Items[index];
+        int itemType = (int)player.itemType;
+
+        if (curPlayer == 0) buttonImg = item_Buttons[index].GetComponentsInChildren<Image>()[1];
+        else buttonImg = enemyItems[index].GetComponentsInChildren<Image>()[1];
+        buttonImg.sprite = itemSprite[itemType];
+    }
+
+    public void ChangeUI(int curPlayer)
+    {
+        if (curPlayer == 0) playerColor.color = player1_Color;
+        else playerColor.color = player2_Color;
+
         for (int i = 0; i < 3; ++i)
         {
             Item player = curPlayer == 0 ? gameManager.player2_Items[i] : gameManager.player1_Items[i];
             if (player.isUsed)
             {
-                Image buttonImg = item_Buttons[i].GetComponentsInChildren<Image>()[1];
-                buttonImg.sprite = null;
+                Image item_Image = item_Buttons[i].GetComponentsInChildren<Image>()[1];
+                item_Image.sprite = null;
             }
             else
             {
@@ -70,7 +114,6 @@ public class UIManager : MonoBehaviour
                 Image buttonImg = item_Buttons[i].GetComponentsInChildren<Image>()[1];
                 buttonImg.sprite = itemSprite[itemType];
             }
-
             Item enemy = curPlayer == 0 ? gameManager.player1_Items[i] : gameManager.player2_Items[i];
             if (enemy.isUsed)
             {

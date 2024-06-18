@@ -21,6 +21,7 @@ public class GameManager : MonoBehaviour
     bool isUsedItem = false;
     int curItemIndex;
     int curDecalIndex = -1;
+    public bool isPlaying = false;
 
     public UIManager uiManager;
 
@@ -29,6 +30,8 @@ public class GameManager : MonoBehaviour
         field = new int[36];
         player1_Arr = new int[36];
         player2_Arr = new int[36];
+        playersCount = new int[2];
+
         victoryCases = new int[,] {
             { 0, 1, 2, 3, 4, 5 },
             { 6, 7, 8, 9, 10, 11 },
@@ -45,21 +48,30 @@ public class GameManager : MonoBehaviour
             { 0, 7, 14, 21, 28, 35 },
             { 5, 10, 15, 20, 25, 30 },
             };
-        playersCount = new int[2];
-
-        for (int i = 0; i < 3; ++i)
-        {
-            int ranType = UnityEngine.Random.Range(0, 4);
-            player1_Items[i].itemType = (Item.Type)ranType;
-            ranType = UnityEngine.Random.Range(0, 4);
-            player2_Items[i].itemType = (Item.Type)ranType;
-        }
     }
 
     void Update()
     {
-        ClickFeild();
-        DecalField();
+        if (isPlaying)
+        {
+            ClickFeild();
+            DecalField();
+        }
+    }
+
+    public void InitField()
+    {
+        for (int i = 0; i < 36; ++i)
+        {
+            field[i] = 0;
+            player1_Arr[i] = 0;
+            player2_Arr[i] = 0;
+        }
+        playersCount[0] = 0;
+        playersCount[1] = 0;
+        CreateItem(0);
+        CreateItem(1);
+        isPlaying = true;
     }
 
     void ClickFeild()
@@ -86,14 +98,13 @@ public class GameManager : MonoBehaviour
                             if (curPlayer == 0) player1_Arr.SetValue(1, index);
                             else player2_Arr.SetValue(1, index);
                             ++playersCount[curPlayer];
-                            isUsedItem = false;
-                            uiManager.ChangeItems(curPlayer);
 
                             if (playersCount[curPlayer] > 5)
                             {
                                 CheckVictory(curPlayer);
                             }
-                            ++turn;
+
+                            ChangeTurn(curPlayer);
                         }
                     }
                 }
@@ -110,22 +121,22 @@ public class GameManager : MonoBehaviour
                             index = int.Parse(hit.transform.parent.parent.name.Split('_')[1]);
                         }
 
-                        if (curPlayer == 0)
-                        {
-                            player1_Items[curItemIndex].OnAblity(index);
-                            UseItem(curItemIndex);
-                            UsedItem(curItemIndex);
-                        }
-                        else if (curPlayer == 1)
-                        {
-                            player2_Items[curItemIndex].OnAblity(index);
-                            UseItem(curItemIndex);
-                            UsedItem(curItemIndex);
-                        }
+                        if (curPlayer == 0) player1_Items[curItemIndex].OnAblity(index);
+                        else if (curPlayer == 1) player2_Items[curItemIndex].OnAblity(index);
+
+                        UseItem(curItemIndex);
+                        UsedItem(curPlayer, curItemIndex);
                     }
                 }
             }
         }
+    }
+
+    void ChangeTurn(int curPlayer)
+    {
+        isUsedItem = false;
+        uiManager.ChangeUI(curPlayer);
+        ++turn;
     }
 
     void CheckVictory(int curPlayer)
@@ -153,9 +164,23 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void CreateItem(int player)
+    {
+        Item[] items = player == 0 ? player1_Items : player2_Items;
+        for (int i = 0; i < 3; ++i)
+        {
+            int ranType = UnityEngine.Random.Range(0, 4);
+            items[i].itemType = (Item.Type)ranType;
+            items[i].isUsed = false;
+        }
+    }
+
     public void UseItem(int index)
     {
         if (isUsedItem) return;
+        if (turn % 2 == 0 && player1_Items[index].isUsed) return;
+        else if (turn % 2 == 1 && player2_Items[index].isUsed) return;
+
         if (isUsingItem && curItemIndex != index)
         {
             isUsingItem = !isUsingItem;
@@ -167,10 +192,29 @@ public class GameManager : MonoBehaviour
         ClearFieldDecal();
     }
 
-    void UsedItem(int index)
+    void UsedItem(int curPlayer,int index)
     {
         isUsedItem = true;
+        if (turn % 2 == 0) player1_Items[index].isUsed = true;
+        else player2_Items[index].isUsed = true;
         uiManager.UsedItem(index);
+    }
+
+    public void DestroyCircle(int index)
+    {
+        Circle circle = fieldObject[index].transform.GetChild(0).gameObject.GetComponent<Circle>();
+        if (!circle.circleType)
+        {
+            player1_Arr[index] = 0;
+            --playersCount[0];
+        }
+        else
+        {
+            player2_Arr[index] = 0;
+            --playersCount[1];
+        }
+        field[index] = 0;
+        Destroy(fieldObject[index].transform.GetChild(0).gameObject);
     }
 
     public void ChangeCircle(int index)
@@ -261,7 +305,7 @@ public class GameManager : MonoBehaviour
         {
             int index = location + (6 * i);
             MeshRenderer fieldColor;
-            if (index - 1 > -1 && index - 1 < 36 && index % 6 > 0)
+            if (index - 1 > -1 && index - 1 < 35 && index % 6 > 0)
             {
                 fieldColor = fieldObject[index - 1].GetComponent<MeshRenderer>();
                 fieldColor.material.color = Color.blue;
@@ -285,12 +329,12 @@ public class GameManager : MonoBehaviour
         {
             int index = location + (6 * i);
             MeshRenderer fieldColor;
-            if (index - 2 > -1 && index - 2 < 36 && index % 6 > 1)
+            if (index - 2 > -1 && index - 2 < 34 && index % 6 > 1)
             {
                 fieldColor = fieldObject[index - 2].GetComponent<MeshRenderer>();
                 fieldColor.material.color = Color.blue;
             }
-            if (index - 1 > -1 && index - 1 < 36 && index % 6 > 0)
+            if (index - 1 > -1 && index - 1 < 35 && index % 6 > 0)
             {
                 fieldColor = fieldObject[index - 1].GetComponent<MeshRenderer>();
                 fieldColor.material.color = Color.blue;
@@ -319,7 +363,7 @@ public class GameManager : MonoBehaviour
         {
             int index = location + (6 * i);
             MeshRenderer fieldColor;
-            if (index - 1 > -1 && index - 1 < 36 && index % 6 > 0)
+            if (index - 1 > -1 && index - 1 < 35 && index % 6 > 0)
             {
                 fieldColor = fieldObject[index - 1].GetComponent<MeshRenderer>();
                 fieldColor.material.color = Color.blue;

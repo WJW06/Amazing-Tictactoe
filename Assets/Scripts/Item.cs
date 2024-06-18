@@ -29,7 +29,6 @@ public class Item : MonoBehaviour
                 ReverseCardAbility(location);
                 break;
         }
-        isUsed = true;
     }
 
     void HammerAbility(int location)
@@ -37,25 +36,21 @@ public class Item : MonoBehaviour
         for (int i = -1; i < 2; ++i)
         {
             int index = location + (6 * i);
-            if (index - 1 > -1 && index - 1 < 36 && index % 6 > 0 && gameManager.field[index - 1] != 0)
+            if (index - 1 > -1 && index - 1 < 35 && index % 6 > 0 && gameManager.field[index - 1] != 0)
             {
-                gameManager.field[index - 1] = 0;
-                Destroy(gameManager.fieldObject[index - 1].transform.GetChild(0).gameObject);
+                gameManager.DestroyCircle(index - 1);
             }
             if (index > -1 && index < 36 && gameManager.field[index] != 0)
             {
-                gameManager.field[index] = 0;
-                Destroy(gameManager.fieldObject[index].transform.GetChild(0).gameObject);
+                gameManager.DestroyCircle(index);
             }
-
             if (index + 1 > 0 && index + 1 < 36 && index % 6 < 5 && gameManager.field[index + 1] != 0)
             {
-                gameManager.field[index + 1] = 0;
-                Destroy(gameManager.fieldObject[index + 1].transform.GetChild(0).gameObject);
+                gameManager.DestroyCircle(index + 1);
             }
-            if (index > -1 && index < 36) StartCoroutine(ChangeFieldColor(index - 1));
+            if (index - 1 > -1 && index - 1 < 35 && index % 6 > 0) StartCoroutine(ChangeFieldColor(index - 1));
             if (index > -1 && index < 36) StartCoroutine(ChangeFieldColor(index));
-            if (index > -1 && index < 36) StartCoroutine(ChangeFieldColor(index + 1));
+            if (index + 1 > 0 && index + 1 < 36 && index % 6 < 5) StartCoroutine(ChangeFieldColor(index + 1));
         }
     }
 
@@ -64,36 +59,31 @@ public class Item : MonoBehaviour
         for (int i = -2; i < 3; ++i)
         {
             int index = location + (6 * i);
-            if (index - 1 > -1 && index - 2 < 36 && index % 6 > 1 && gameManager.field[index - 2] != 0)
+            if (index - 1 > -1 && index - 2 < 34 && index % 6 > 1 && gameManager.field[index - 2] != 0)
             {
-                gameManager.field[index - 2] = 0;
-                Destroy(gameManager.fieldObject[index - 2].transform.GetChild(0).gameObject);
+                gameManager.DestroyCircle(index - 2);
             }
-            if (index - 1 > -1 && index - 1 < 36 && index % 6 > 0 && gameManager.field[index - 1] != 0)
+            if (index - 1 > -1 && index - 1 < 35 && index % 6 > 0 && gameManager.field[index - 1] != 0)
             {
-                gameManager.field[index - 1] = 0;
-                Destroy(gameManager.fieldObject[index - 1].transform.GetChild(0).gameObject);
+                gameManager.DestroyCircle(index - 1);
             }
             if (index > -1 && index < 36 && gameManager.field[index] != 0)
             {
-                gameManager.field[index] = 0;
-                Destroy(gameManager.fieldObject[index].transform.GetChild(0).gameObject);
+                gameManager.DestroyCircle(index);
             }
             if (index + 1 > 0 && index + 1 < 36 && index % 6 < 5 && gameManager.field[index + 1] != 0)
             {
-                gameManager.field[index + 1] = 0;
-                Destroy(gameManager.fieldObject[index + 1].transform.GetChild(0).gameObject);
+                gameManager.DestroyCircle(index + 1);
             }
             if (index + 2 > 1 && index + 2 < 36 && index % 6 < 4 && gameManager.field[index + 2] != 0)
             {
-                gameManager.field[index + 2] = 0;
-                Destroy(gameManager.fieldObject[index + 2].transform.GetChild(0).gameObject);
+                gameManager.DestroyCircle(index + 2);
             }
-            if (index > -1 && index < 36) StartCoroutine(ChangeFieldColor(index - 2));
-            if (index > -1 && index < 36) StartCoroutine(ChangeFieldColor(index - 1));
+            if (index - 2 > -1 && index - 2 < 34 && index % 6 > 1) StartCoroutine(ChangeFieldColor(index - 2));
+            if (index - 1 > -1 && index - 1 < 35 && index % 6 > 0) StartCoroutine(ChangeFieldColor(index - 1));
             if (index > -1 && index < 36) StartCoroutine(ChangeFieldColor(index));
-            if (index > -1 && index < 36) StartCoroutine(ChangeFieldColor(index + 1));
-            if (index > -1 && index < 36) StartCoroutine(ChangeFieldColor(index + 2));
+            if (index + 1 > 0 && index + 1 < 36 && index % 6 < 5) StartCoroutine(ChangeFieldColor(index + 1));
+            if (index + 2 > 1 && index + 2 < 36 && index % 6 < 4) StartCoroutine(ChangeFieldColor(index + 2));
         }
     }
 
@@ -102,11 +92,15 @@ public class Item : MonoBehaviour
         int[] indexs = new int[3];
         for (int i = 0; i < 3; ++i)
         {
-            int ranH = UnityEngine.Random.Range(-1, 2);
-            int ranV;
-            if (location % 6 < 1) ranV = UnityEngine.Random.Range(0, 2);
-            else if (location % 6 > 4) ranV = UnityEngine.Random.Range(-1, 1);
+            int ranV, ranH;
+
+            if (location < 6) ranV = UnityEngine.Random.Range(0, 2);
+            else if (location > 29) ranV = UnityEngine.Random.Range(-1, 1);
             else ranV = UnityEngine.Random.Range(-1, 2);
+
+            if (location % 6 < 1) ranH = UnityEngine.Random.Range(0, 2);
+            else if (location % 6 > 4) ranH = UnityEngine.Random.Range(-1, 1);
+            else ranH = UnityEngine.Random.Range(-1, 2);
 
             int index = location + (6 * ranV) + ranH;
 
@@ -122,8 +116,7 @@ public class Item : MonoBehaviour
 
             if (index > -1 && index < 36 && gameManager.field[index] != 0)
             {
-                gameManager.field[index] = 0;
-                Destroy(gameManager.fieldObject[index].transform.GetChild(0).gameObject);
+                gameManager.DestroyCircle(index);
             }
             if (index > -1 && index < 36) StartCoroutine(ChangeFieldColor(index));
         }
