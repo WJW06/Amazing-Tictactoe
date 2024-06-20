@@ -20,10 +20,11 @@ public class UIManager : MonoBehaviour
     Color player1_Color = new Color(255, 0, 0);
     Color player2_Color = new Color(0, 100, 255);
     float time;
+    bool isPlaying;
 
     void Update()
     {
-        if (gameManager.isPlaying)
+        if (isPlaying)
         {
             time += Time.deltaTime;
             int min = Mathf.FloorToInt(time / 60);
@@ -48,6 +49,7 @@ public class UIManager : MonoBehaviour
         }
         ChangeUI(1);
         time = 0;
+        isPlaying = true;
     }
 
     public void GameEnd(int winner)
@@ -66,16 +68,12 @@ public class UIManager : MonoBehaviour
         if (winner == 0) winPlayer = "Player1 Win!";
         else winPlayer = "Player2 Win!";
         messageText.text = winPlayer;
-        gameManager.isPlaying = false;
+        isPlaying = false;
     }
 
     public void GameRestart()
     {
-        GameObject[] circles = GameObject.FindGameObjectsWithTag("Circle");
-        foreach (GameObject circle in circles)
-        {
-            circle.SetActive(false);
-        }
+        gameManager.ClearField();
         messageBanner.gameObject.SetActive(false);
         timeText.gameObject.SetActive(false);
         playerColor.gameObject.SetActive(false);

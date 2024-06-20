@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
+  m_IndirectSpecularColor: {r: 0.18028334, g: 0.22571328, b: 0.3069217, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -2504,7 +2504,7 @@ MonoBehaviour:
   circle:
   - {fileID: 6395727237650788809, guid: 7b3abbd42420d54498d7b5918f2c8e98, type: 3}
   - {fileID: 6395727237650788809, guid: c8e18839567294540b6f4224cf9121cf, type: 3}
-  fieldObject:
+  fieldObjects:
   - {fileID: 1356945446}
   - {fileID: 736245861}
   - {fileID: 1168010712}
@@ -2552,7 +2552,6 @@ MonoBehaviour:
   - {fileID: 249766880}
   - {fileID: 727638459}
   - {fileID: 765555001}
-  isPlaying: 0
   uiManager: {fileID: 1352844459}
 --- !u!65 &652621031
 BoxCollider:

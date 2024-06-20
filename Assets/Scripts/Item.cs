@@ -133,7 +133,7 @@ public class Item : MonoBehaviour
     IEnumerator ChangeFieldColor(int index)
     {
         yield return new WaitForEndOfFrame();
-        MeshRenderer fieldColor = gameManager.fieldObject[index].GetComponent<MeshRenderer>();
+        MeshRenderer fieldColor = gameManager.fieldObjects[index].GetComponent<MeshRenderer>();
 
         fieldColor.material.color = Color.red;
         yield return waitScond;
