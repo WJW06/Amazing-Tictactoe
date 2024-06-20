@@ -23,6 +23,7 @@ public class GameManager : MonoBehaviour
     int curDecalIndex = -1;
     int[] playerItemCount;
     bool isPlaying = false;
+    WaitForSeconds startDelay = new WaitForSeconds(0.1f);
 
     public UIManager uiManager;
 
@@ -73,7 +74,9 @@ public class GameManager : MonoBehaviour
         playersCount[1] = 0;
         CreateItems(0);
         CreateItems(1);
-        isPlaying = true;
+        turn = 0;
+        isUsedItem = false;
+        StartCoroutine(StartDelay());
     }
 
     public void ClearField()
@@ -201,7 +204,22 @@ public class GameManager : MonoBehaviour
 
         for (int i = 0; i < 3; ++i)
         {
-            int ranType = UnityEngine.Random.Range(0, 4);
+            int ranType = UnityEngine.Random.Range(0, 6);
+            switch (ranType)
+            {
+                // Hammer is 0
+                case 1:
+                case 2:
+                    ranType = 1; // HandGun
+                    break;
+                case 3:
+                case 4:
+                    ranType = 2; // ShotGun
+                    break;
+                case 5:
+                    ranType = 3; // WildCard
+                    break;
+            }
             items[i].itemType = (Item.Type)ranType;
             items[i].isUsed = false;
         }
@@ -306,14 +324,14 @@ public class GameManager : MonoBehaviour
                         case Item.Type.Hammer:
                             HammerDecal(index);
                             break;
-                        case Item.Type.Grenade:
-                            GrenadeDecal(index);
+                        case Item.Type.HandGun:
+                            HandGunDecal();
                             break;
                         case Item.Type.Shotgun:
                             ShotgunDecal(index);
                             break;
-                        case Item.Type.ReverseCard:
-                            ReverseCardDecal(index);
+                        case Item.Type.WildCard:
+                            WildCardDecal(index);
                             break;
                     }
                 }
@@ -324,14 +342,14 @@ public class GameManager : MonoBehaviour
                         case Item.Type.Hammer:
                             HammerDecal(index);
                             break;
-                        case Item.Type.Grenade:
-                            GrenadeDecal(index);
+                        case Item.Type.HandGun:
+                            HandGunDecal();
                             break;
                         case Item.Type.Shotgun:
                             ShotgunDecal(index);
                             break;
-                        case Item.Type.ReverseCard:
-                            ReverseCardDecal(index);
+                        case Item.Type.WildCard:
+                            WildCardDecal(index);
                             break;
                     }
                 }
@@ -363,37 +381,13 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void GrenadeDecal(int location)
+    void HandGunDecal()
     {
-        for (int i = -2; i < 3; ++i)
+        for (int i = 0; i < 36; ++i)
         {
-            int index = location + (6 * i);
             MeshRenderer fieldColor;
-            if (index - 2 > -1 && index - 2 < 34 && index % 6 > 1)
-            {
-                fieldColor = fieldObjects[index - 2].GetComponent<MeshRenderer>();
-                fieldColor.material.color = Color.blue;
-            }
-            if (index - 1 > -1 && index - 1 < 35 && index % 6 > 0)
-            {
-                fieldColor = fieldObjects[index - 1].GetComponent<MeshRenderer>();
-                fieldColor.material.color = Color.blue;
-            }
-            if (index > -1 && index < 36)
-            {
-                fieldColor = fieldObjects[index].GetComponent<MeshRenderer>();
-                fieldColor.material.color = Color.blue;
-            }
-            if (index + 1 > 0 && index + 1 < 36 && index % 6 < 5)
-            {
-                fieldColor = fieldObjects[index + 1].GetComponent<MeshRenderer>();
-                fieldColor.material.color = Color.blue;
-            }
-            if (index + 2 > 1 && index + 2 < 36 && index % 6 < 4)
-            {
-                fieldColor = fieldObjects[index + 2].GetComponent<MeshRenderer>();
-                fieldColor.material.color = Color.blue;
-            }
+            fieldColor = fieldObjects[i].GetComponent<MeshRenderer>();
+            fieldColor.material.color = Color.blue;
         }
     }
 
@@ -421,7 +415,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void ReverseCardDecal(int location)
+    void WildCardDecal(int location)
     {
         MeshRenderer fieldColor = fieldObjects[location].GetComponent<MeshRenderer>(); ;
         fieldColor.material.color = Color.blue;
@@ -434,5 +428,11 @@ public class GameManager : MonoBehaviour
             MeshRenderer fieldColor = field.GetComponent<MeshRenderer>();
             fieldColor.material.color = Color.white;
         }
+    }
+
+    IEnumerator StartDelay()
+    {
+        yield return startDelay;
+        isPlaying = true;
     }
 }

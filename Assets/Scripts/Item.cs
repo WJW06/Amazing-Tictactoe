@@ -6,11 +6,12 @@ using UnityEngine;
 
 public class Item : MonoBehaviour
 {
-    public enum Type { Default = -1, Hammer, Grenade, Shotgun, ReverseCard };
+    public enum Type { Default = -1, Hammer, HandGun, Shotgun, WildCard };
     public Type itemType;
     public GameManager gameManager;
     public bool isUsed = false;
-    WaitForSeconds waitScond = new WaitForSeconds(0.5f);
+    WaitForSeconds waitSecond = new WaitForSeconds(0.5f);
+    WaitForSeconds handGunSecond = new WaitForSeconds(0.4f);
 
     public void OnAblity(int location)
     {
@@ -19,14 +20,14 @@ public class Item : MonoBehaviour
             case Type.Hammer:
                 HammerAbility(location);
                 break;
-            case Type.Grenade:
-                GrenadeAbility(location);
+            case Type.HandGun:
+                HandGunAbility();
                 break;
             case Type.Shotgun:
                 ShotgunAbility(location);
                 break;
-            case Type.ReverseCard:
-                ReverseCardAbility(location);
+            case Type.WildCard:
+                WildCardAbility(location);
                 break;
         }
     }
@@ -54,37 +55,21 @@ public class Item : MonoBehaviour
         }
     }
 
-    void GrenadeAbility(int location)
+    void HandGunAbility()
     {
-        for (int i = -2; i < 3; ++i)
+        int[] indexs = new int[5];
+        for (int i = 0; i < 5; ++i)
         {
-            int index = location + (6 * i);
-            if (index - 1 > -1 && index - 2 < 34 && index % 6 > 1 && gameManager.field[index - 2] != 0)
+            int index = UnityEngine.Random.Range(0, 36);
+
+            if (Array.IndexOf(indexs, index) != -1)
             {
-                gameManager.DestroyCircle(index - 2);
+                --i;
+                continue;
             }
-            if (index - 1 > -1 && index - 1 < 35 && index % 6 > 0 && gameManager.field[index - 1] != 0)
-            {
-                gameManager.DestroyCircle(index - 1);
-            }
-            if (index > -1 && index < 36 && gameManager.field[index] != 0)
-            {
-                gameManager.DestroyCircle(index);
-            }
-            if (index + 1 > 0 && index + 1 < 36 && index % 6 < 5 && gameManager.field[index + 1] != 0)
-            {
-                gameManager.DestroyCircle(index + 1);
-            }
-            if (index + 2 > 1 && index + 2 < 36 && index % 6 < 4 && gameManager.field[index + 2] != 0)
-            {
-                gameManager.DestroyCircle(index + 2);
-            }
-            if (index - 2 > -1 && index - 2 < 34 && index % 6 > 1) StartCoroutine(ChangeFieldColor(index - 2));
-            if (index - 1 > -1 && index - 1 < 35 && index % 6 > 0) StartCoroutine(ChangeFieldColor(index - 1));
-            if (index > -1 && index < 36) StartCoroutine(ChangeFieldColor(index));
-            if (index + 1 > 0 && index + 1 < 36 && index % 6 < 5) StartCoroutine(ChangeFieldColor(index + 1));
-            if (index + 2 > 1 && index + 2 < 36 && index % 6 < 4) StartCoroutine(ChangeFieldColor(index + 2));
+            indexs.SetValue(index, i);
         }
+        StartCoroutine(HandGunCoroutine(indexs));
     }
 
     void ShotgunAbility(int location)
@@ -104,15 +89,12 @@ public class Item : MonoBehaviour
 
             int index = location + (6 * ranV) + ranH;
 
-            if (Array.IndexOf(indexs, index) == -1)
-            {
-                indexs.SetValue(index, i);
-            }
-            else
+            if (Array.IndexOf(indexs, index) != -1)
             {
                 --i;
                 continue;
             }
+            indexs.SetValue(index, i);
 
             if (index > -1 && index < 36 && gameManager.field[index] != 0)
             {
@@ -122,11 +104,24 @@ public class Item : MonoBehaviour
         }
     }
 
-    void ReverseCardAbility(int location)
+    void WildCardAbility(int location)
     {
         if (gameManager.field[location] != 0)
         {
             gameManager.ChangeCircle(location);
+        }
+    }
+
+    IEnumerator HandGunCoroutine(int[] indexs)
+    {
+        foreach (int index in indexs)
+        {
+            if (gameManager.field[index] != 0)
+            {
+                gameManager.DestroyCircle(index);
+            }
+            StartCoroutine(ChangeFieldColor(index));
+            yield return handGunSecond;
         }
     }
 
@@ -136,7 +131,7 @@ public class Item : MonoBehaviour
         MeshRenderer fieldColor = gameManager.fieldObjects[index].GetComponent<MeshRenderer>();
 
         fieldColor.material.color = Color.red;
-        yield return waitScond;
+        yield return waitSecond;
         fieldColor.material.color = Color.white;
     }
 }
