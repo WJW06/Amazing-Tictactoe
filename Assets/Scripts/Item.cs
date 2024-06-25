@@ -53,6 +53,7 @@ public class Item : MonoBehaviour
             if (index > -1 && index < 36) StartCoroutine(ChangeFieldColor(index));
             if (index + 1 > 0 && index + 1 < 36 && index % 6 < 5) StartCoroutine(ChangeFieldColor(index + 1));
         }
+        AudioManager.audioManager.PlaySfx(AudioManager.Sfx.Hammer);
     }
 
     void HandGunAbility()
@@ -102,6 +103,7 @@ public class Item : MonoBehaviour
             }
             if (index > -1 && index < 36) StartCoroutine(ChangeFieldColor(index));
         }
+        AudioManager.audioManager.PlaySfx(AudioManager.Sfx.Shotgun);
     }
 
     void WildCardAbility(int location)
@@ -110,6 +112,7 @@ public class Item : MonoBehaviour
         {
             gameManager.ChangeCircle(location);
         }
+        AudioManager.audioManager.PlaySfx(AudioManager.Sfx.WildCard);
     }
 
     IEnumerator HandGunCoroutine(int[] indexs)
@@ -121,6 +124,7 @@ public class Item : MonoBehaviour
                 gameManager.DestroyCircle(index);
             }
             StartCoroutine(ChangeFieldColor(index));
+            AudioManager.audioManager.PlaySfx(AudioManager.Sfx.HandGun);
             yield return handGunSecond;
         }
     }

@@ -7,6 +7,8 @@ using static UnityEditor.FilePathAttribute;
 
 public class GameManager : MonoBehaviour
 {
+    public static GameManager gameManager;
+
     public int turn = 0;
     public GameObject[] circle;
     public GameObject[] fieldObjects;
@@ -24,11 +26,12 @@ public class GameManager : MonoBehaviour
     int[] playerItemCount;
     bool isPlaying = false;
     WaitForSeconds startDelay = new WaitForSeconds(0.1f);
-
-    public UIManager uiManager;
+    public AudioClip circleAudio;
 
     void Awake()
     {
+        gameManager = this;
+
         field = new int[36];
         player1_Arr = new int[36];
         player2_Arr = new int[36];
@@ -111,6 +114,7 @@ public class GameManager : MonoBehaviour
                             field[index] = curPlayer + 1;
                             if (curPlayer == 0) player1_Arr.SetValue(1, index);
                             else player2_Arr.SetValue(1, index);
+                            AudioManager.audioManager.PlaySfx((AudioManager.Sfx)curPlayer);
                             ++playersCount[curPlayer];
 
                             if (playersCount[curPlayer] > 5)
@@ -150,7 +154,7 @@ public class GameManager : MonoBehaviour
     void ChangeTurn(int curPlayer)
     {
         isUsedItem = false;
-        uiManager.ChangeUI(curPlayer);
+        UIManager.uiManager.ChangeUI(curPlayer);
         if (curPlayer == 0 && playerItemCount[0] == 0)
         {
             CreateItems(0);
@@ -182,9 +186,11 @@ public class GameManager : MonoBehaviour
 
         if (victory)
         {
-            uiManager.GameEnd(curPlayer);
             Debug.Log("플레이어" + curPlayer + " 승!");
             isPlaying = false;
+            UIManager.uiManager.GameEnd(curPlayer);
+            AudioManager.audioManager.PlaySfx(AudioManager.Sfx.Win);
+            AudioManager.audioManager.PlayBgm(false);
         }
     }
 
@@ -234,11 +240,12 @@ public class GameManager : MonoBehaviour
         if (isUsingItem && curItemIndex != index)
         {
             isUsingItem = !isUsingItem;
-            uiManager.UsingItem(curItemIndex, isUsingItem);
+            UIManager.uiManager.UsingItem(curItemIndex, isUsingItem);
         }
         isUsingItem = !isUsingItem;
         curItemIndex = index;
-        uiManager.UsingItem(index, isUsingItem);
+        UIManager.uiManager.UsingItem(index, isUsingItem);
+        AudioManager.audioManager.PlaySfx(AudioManager.Sfx.Item);
         ClearFieldDecal();
     }
 
@@ -255,7 +262,7 @@ public class GameManager : MonoBehaviour
             player2_Items[index].isUsed = true;
             --playerItemCount[1];
         }
-        uiManager.UsedItem(index);
+        UIManager.uiManager.UsedItem(index);
     }
 
     public void DestroyCircle(int index)
