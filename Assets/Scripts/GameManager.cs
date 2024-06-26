@@ -10,8 +10,7 @@ public class GameManager : MonoBehaviour
     public static GameManager gameManager;
 
     public int turn = 0;
-    public GameObject[] circle;
-    public GameObject[] fieldObjects;
+    public Floor[] floors;
     public int[] field;
     public int[] player1_Arr;
     public int[] player2_Arr;
@@ -26,7 +25,6 @@ public class GameManager : MonoBehaviour
     int[] playerItemCount;
     bool isPlaying = false;
     WaitForSeconds startDelay = new WaitForSeconds(0.1f);
-    public AudioClip circleAudio;
 
     void Awake()
     {
@@ -84,10 +82,9 @@ public class GameManager : MonoBehaviour
 
     public void ClearField()
     {
-        int index = 0;
-        foreach (GameObject fieldObject in fieldObjects)
+        foreach (Floor floor in floors)
         {
-            if (field[index++] != 0) Destroy(fieldObject.transform.GetChild(0).gameObject);
+            floor.UnSetCircle();
         }
     }
 
@@ -105,12 +102,11 @@ public class GameManager : MonoBehaviour
                 {
                     if (hit.transform.tag == "Floor")
                     {
-                        index = int.Parse(hit.transform.name.Split('_')[1]);
+                        Floor floor = hit.transform.GetComponent<Floor>();
+                        index = floor.floorIndex;
                         if (field[index] == 0)
                         {
-                            Vector3 clickPos = hit.transform.position;
-                            GameObject instCircle = Instantiate(circle[curPlayer], clickPos, Quaternion.identity);
-                            instCircle.transform.SetParent(hit.transform);
+                            floor.SetCircle(curPlayer);
                             field[index] = curPlayer + 1;
                             if (curPlayer == 0) player1_Arr.SetValue(1, index);
                             else player2_Arr.SetValue(1, index);
@@ -132,7 +128,8 @@ public class GameManager : MonoBehaviour
                     {
                         if (hit.transform.tag == "Floor")
                         {
-                            index = int.Parse(hit.transform.name.Split('_')[1]);
+                            Floor floor = hit.transform.GetComponent<Floor>();
+                            index = floor.floorIndex;
                         }
                         else if (hit.transform.tag == "Circle")
                         {
@@ -267,27 +264,19 @@ public class GameManager : MonoBehaviour
 
     public void DestroyCircle(int index)
     {
-        Circle circle = fieldObjects[index].transform.GetChild(0).gameObject.GetComponent<Circle>();
-        if (!circle.circleType)
-        {
-            player1_Arr[index] = 0;
-            --playersCount[0];
-        }
-        else
-        {
-            player2_Arr[index] = 0;
-            --playersCount[1];
-        }
+        Floor floor = floors[index];
+        int curPlayer = floor.UnSetCircle();
+        if (curPlayer == 0) player1_Arr[index] = 0;
+        else player2_Arr[index] = 0;
+        playersCount[curPlayer] = 0;
         field[index] = 0;
-        Destroy(fieldObjects[index].transform.GetChild(0).gameObject);
     }
 
     public void ChangeCircle(int index)
     {
-        Destroy(fieldObjects[index].transform.GetChild(0).gameObject);
+        Floor floor = floors[index];
         int curPlayer = turn % 2;
-        GameObject instCircle = Instantiate(circle[curPlayer], fieldObjects[index].transform.position, Quaternion.identity);
-        instCircle.transform.SetParent(fieldObjects[index].transform);
+        floor.SetCircle(curPlayer);
         field[index] = field[index] == 1 ? 2 : 1;
         if (curPlayer == 0)
         {
@@ -372,17 +361,17 @@ public class GameManager : MonoBehaviour
             MeshRenderer fieldColor;
             if (index - 1 > -1 && index - 1 < 35 && index % 6 > 0)
             {
-                fieldColor = fieldObjects[index - 1].GetComponent<MeshRenderer>();
+                fieldColor = floors[index - 1].GetComponent<MeshRenderer>();
                 fieldColor.material.color = Color.blue;
             }
             if (index > -1 && index < 36)
             {
-                fieldColor = fieldObjects[index].GetComponent<MeshRenderer>();
+                fieldColor = floors[index].GetComponent<MeshRenderer>();
                 fieldColor.material.color = Color.blue;
             }
             if (index + 1 > 0 && index + 1 < 36 && index % 6 < 5)
             {
-                fieldColor = fieldObjects[index + 1].GetComponent<MeshRenderer>();
+                fieldColor = floors[index + 1].GetComponent<MeshRenderer>();
                 fieldColor.material.color = Color.blue;
             }
         }
@@ -393,7 +382,7 @@ public class GameManager : MonoBehaviour
         for (int i = 0; i < 36; ++i)
         {
             MeshRenderer fieldColor;
-            fieldColor = fieldObjects[i].GetComponent<MeshRenderer>();
+            fieldColor = floors[i].GetComponent<MeshRenderer>();
             fieldColor.material.color = Color.blue;
         }
     }
@@ -406,17 +395,17 @@ public class GameManager : MonoBehaviour
             MeshRenderer fieldColor;
             if (index - 1 > -1 && index - 1 < 35 && index % 6 > 0)
             {
-                fieldColor = fieldObjects[index - 1].GetComponent<MeshRenderer>();
+                fieldColor = floors[index - 1].GetComponent<MeshRenderer>();
                 fieldColor.material.color = Color.blue;
             }
             if (index > -1 && index < 36)
             {
-                fieldColor = fieldObjects[index].GetComponent<MeshRenderer>();
+                fieldColor = floors[index].GetComponent<MeshRenderer>();
                 fieldColor.material.color = Color.blue;
             }
             if (index + 1 > 0 && index + 1 < 36 && index % 6 < 5)
             {
-                fieldColor = fieldObjects[index + 1].GetComponent<MeshRenderer>();
+                fieldColor = floors[index + 1].GetComponent<MeshRenderer>();
                 fieldColor.material.color = Color.blue;
             }
         }
@@ -424,15 +413,15 @@ public class GameManager : MonoBehaviour
 
     void WildCardDecal(int location)
     {
-        MeshRenderer fieldColor = fieldObjects[location].GetComponent<MeshRenderer>(); ;
+        MeshRenderer fieldColor = floors[location].GetComponent<MeshRenderer>(); ;
         fieldColor.material.color = Color.blue;
     }
 
     void ClearFieldDecal()
     {
-        foreach (GameObject field in fieldObjects)
+        foreach (Floor floor in floors)
         {
-            MeshRenderer fieldColor = field.GetComponent<MeshRenderer>();
+            MeshRenderer fieldColor = floor.GetComponent<MeshRenderer>();
             fieldColor.material.color = Color.white;
         }
     }

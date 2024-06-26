@@ -10,8 +10,8 @@ public class Item : MonoBehaviour
     public Type itemType;
     public GameManager gameManager;
     public bool isUsed = false;
-    WaitForSeconds waitSecond = new WaitForSeconds(0.5f);
-    WaitForSeconds handGunSecond = new WaitForSeconds(0.4f);
+    WaitForSeconds waitSecond = new WaitForSeconds(0.4f);
+    WaitForSeconds handGunSecond = new WaitForSeconds(0.3f);
 
     public void OnAblity(int location)
     {
@@ -132,7 +132,7 @@ public class Item : MonoBehaviour
     IEnumerator ChangeFieldColor(int index)
     {
         yield return new WaitForEndOfFrame();
-        MeshRenderer fieldColor = gameManager.fieldObjects[index].GetComponent<MeshRenderer>();
+        MeshRenderer fieldColor = gameManager.floors[index].GetComponent<MeshRenderer>();
 
         fieldColor.material.color = Color.red;
         yield return waitSecond;

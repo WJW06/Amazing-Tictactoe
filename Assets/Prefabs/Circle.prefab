@@ -116,9 +116,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2368876267407329596}
-  - component: {fileID: 3079851340361764394}
+  - component: {fileID: -2781815707654035990}
   m_Layer: 0
-  m_Name: Circle_2
+  m_Name: Circle
   m_TagString: Circle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -141,7 +141,7 @@ Transform:
   - {fileID: 2239073816428226138}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3079851340361764394
+--- !u!114 &-2781815707654035990
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -153,7 +153,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b47b5192c2b6e846bedc43e95fca315, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  circleType: 1
+  circleType: 0
+  circleColors:
+  - {fileID: 2100000, guid: 869a8e3ce1f5bcd4da6fe2b3beff2999, type: 2}
+  - {fileID: 2100000, guid: 228580635fc23764fa90c9640638de2e, type: 2}
 --- !u!1 &6494737360515853004
 GameObject:
   m_ObjectHideFlags: 0
@@ -216,7 +219,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 228580635fc23764fa90c9640638de2e, type: 2}
+  - {fileID: 2100000, guid: 869a8e3ce1f5bcd4da6fe2b3beff2999, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

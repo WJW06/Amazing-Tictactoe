@@ -4,5 +4,14 @@ using UnityEngine;
 
 public class Circle : MonoBehaviour
 {
-    public bool circleType;
+    public enum CircleType { player1, player2 };
+    public CircleType circleType;
+    public Material[] circleColors;
+
+    public void SetCircleType(CircleType type)
+    {
+        MeshRenderer meshColor = GetComponentsInChildren<MeshRenderer>()[0];
+        meshColor.material = circleColors[(int)type];
+        circleType = type;
+    }
 }
