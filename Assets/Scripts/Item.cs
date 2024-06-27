@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using static UnityEditor.FilePathAttribute;
 
 public class Item : MonoBehaviour
 {
@@ -54,6 +55,7 @@ public class Item : MonoBehaviour
             if (index + 1 > 0 && index + 1 < 36 && index % 6 < 5) StartCoroutine(ChangeFieldColor(index + 1));
         }
         AudioManager.audioManager.PlaySfx(AudioManager.Sfx.Hammer);
+        GameManager.gameManager.floors[location].HammerParticle();
     }
 
     void HandGunAbility()
@@ -101,9 +103,13 @@ public class Item : MonoBehaviour
             {
                 gameManager.DestroyCircle(index);
             }
-            if (index > -1 && index < 36) StartCoroutine(ChangeFieldColor(index));
+            if (index > -1 && index < 36)
+            {
+                StartCoroutine(ChangeFieldColor(index));
+                GameManager.gameManager.floors[index].ShotParticle();
+            }
+            AudioManager.audioManager.PlaySfx(AudioManager.Sfx.Shotgun);
         }
-        AudioManager.audioManager.PlaySfx(AudioManager.Sfx.Shotgun);
     }
 
     void WildCardAbility(int location)
@@ -125,6 +131,7 @@ public class Item : MonoBehaviour
             }
             StartCoroutine(ChangeFieldColor(index));
             AudioManager.audioManager.PlaySfx(AudioManager.Sfx.HandGun);
+            GameManager.gameManager.floors[index].ShotParticle();
             yield return handGunSecond;
         }
     }

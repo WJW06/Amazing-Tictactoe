@@ -133,7 +133,8 @@ public class GameManager : MonoBehaviour
                         }
                         else if (hit.transform.tag == "Circle")
                         {
-                            index = int.Parse(hit.transform.parent.parent.name.Split('_')[1]);
+                            Floor floor = hit.transform.GetComponentInParent<Floor>();
+                            index = floor.floorIndex;
                         }
 
                         if (curPlayer == 0) player1_Items[curItemIndex].OnAblity(index);
@@ -207,19 +208,25 @@ public class GameManager : MonoBehaviour
 
         for (int i = 0; i < 3; ++i)
         {
-            int ranType = UnityEngine.Random.Range(0, 6);
+            int ranType = UnityEngine.Random.Range(0, 10);
             switch (ranType)
             {
-                // Hammer is 0
+                case 0:
                 case 1:
-                case 2:
-                    ranType = 1; // HandGun
+                    ranType = 0; // Hammer
                     break;
+                case 2:
                 case 3:
                 case 4:
-                    ranType = 2; // ShotGun
+                    ranType = 1; // HandGun
                     break;
                 case 5:
+                case 6:
+                case 7:
+                    ranType = 2; // ShotGun
+                    break;
+                case 8:
+                case 9:
                     ranType = 3; // WildCard
                     break;
             }
@@ -303,11 +310,13 @@ public class GameManager : MonoBehaviour
             {
                 if (hit.transform.tag == "Floor")
                 {
-                    index = int.Parse(hit.transform.name.Split('_')[1]);
+                    Floor floor = hit.transform.GetComponent<Floor>();
+                    index = floor.floorIndex;
                 }
                 else if (hit.transform.tag == "Circle")
                 {
-                    index = int.Parse(hit.transform.parent.parent.name.Split('_')[1]);
+                    Floor floor = hit.transform.GetComponentInParent<Floor>();
+                    index = floor.floorIndex;
                 }
 
                 if (curDecalIndex != index && curDecalIndex != -1) ClearFieldDecal();
