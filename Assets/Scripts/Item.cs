@@ -119,6 +119,7 @@ public class Item : MonoBehaviour
             gameManager.ChangeCircle(location);
         }
         AudioManager.audioManager.PlaySfx(AudioManager.Sfx.WildCard);
+        GameManager.gameManager.floors[location].WildCardParticle();
     }
 
     IEnumerator HandGunCoroutine(int[] indexs)

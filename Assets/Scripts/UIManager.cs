@@ -9,6 +9,8 @@ public class UIManager : MonoBehaviour
     public static UIManager uiManager;
 
     public GameObject playGround;
+    public Button battleMode_Button;
+    public Button aiMode_Button;
     public Button start_Button;
     public Button restart_Button;
     public Button[] item_Buttons;
@@ -38,6 +40,25 @@ public class UIManager : MonoBehaviour
             timeText.text = string.Format("Time: {0:D2}:{1:D2}", min, sec);
         }
     }
+    
+    public void StartButton()
+    {
+        battleMode_Button.gameObject.SetActive(true);
+        aiMode_Button.gameObject.SetActive(true);
+        start_Button.gameObject.SetActive(false);
+    }
+
+    public void AIMode()
+    {
+        GameManager.gameManager.isPlayerBattle = false;
+        GameStart();
+    }
+
+    public void BattleMode()
+    {
+        GameManager.gameManager.isPlayerBattle = true;
+        GameStart();
+    }
 
     public void GameStart()
     {
@@ -45,7 +66,6 @@ public class UIManager : MonoBehaviour
         playGround.SetActive(true);
         timeText.gameObject.SetActive(true);
         playerColor.gameObject.SetActive(true);
-        start_Button.gameObject.SetActive(false);
         for (int i = 0; i < 3; ++i)
         {
             SetItemImage(0, i);
@@ -56,6 +76,9 @@ public class UIManager : MonoBehaviour
         ChangeUI(1);
         time = 0;
         isPlaying = true;
+        start_Button.gameObject.SetActive(false);
+        battleMode_Button.gameObject.SetActive(false);
+        aiMode_Button.gameObject.SetActive(false);
         AudioManager.audioManager.PlaySfx(AudioManager.Sfx.Hammer);
     }
 

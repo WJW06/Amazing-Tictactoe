@@ -10,8 +10,10 @@ public class Floor : MonoBehaviour
 
     public GameObject hammerParticle;
     public GameObject shotParticle;
+    public GameObject wildCardParticle;
     WaitForSeconds hammerDelay = new WaitForSeconds(1);
     WaitForSeconds shotDelay = new WaitForSeconds(0.5f);
+    WaitForSeconds wildCardDelay = new WaitForSeconds(0.6f);
 
     public void SetCircle(int curPlayer)
     {
@@ -37,6 +39,11 @@ public class Floor : MonoBehaviour
         StartCoroutine(ShotCoroutine());
     }
 
+    public void WildCardParticle()
+    {
+        StartCoroutine(WildCardCoroutine());
+    }
+
     IEnumerator HammerCoroutine()
     {
         hammerParticle.gameObject.SetActive(true);
@@ -49,5 +56,12 @@ public class Floor : MonoBehaviour
         shotParticle.gameObject.SetActive(true);
         yield return shotDelay;
         shotParticle.gameObject.SetActive(false);
+    }
+
+    IEnumerator WildCardCoroutine()
+    {
+        wildCardParticle.gameObject.SetActive(true);
+        yield return wildCardDelay;
+        wildCardParticle.gameObject.SetActive(false);
     }
 }

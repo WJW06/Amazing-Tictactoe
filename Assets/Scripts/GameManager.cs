@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager gameManager;
 
+    public bool isPlayerBattle;
     public int turn = 0;
     public Floor[] floors;
     public int[] field;
@@ -88,6 +89,28 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void CreateCircle(int index)
+    {
+        int curPlayer = turn % 2;
+
+        if (field[index] == 0)
+        {
+            floors[index].SetCircle(curPlayer);
+            field[index] = curPlayer + 1;
+            if (curPlayer == 0) player1_Arr.SetValue(1, index);
+            else player2_Arr.SetValue(1, index);
+            AudioManager.audioManager.PlaySfx((AudioManager.Sfx)curPlayer);
+            ++playersCount[curPlayer];
+
+            if (playersCount[curPlayer] > 5)
+            {
+                CheckVictory(curPlayer);
+            }
+
+            if (isPlaying) ChangeTurn(curPlayer);
+        }
+    }
+
     void ClickFeild()
     {
         if (Input.GetMouseButtonDown(0))
@@ -104,22 +127,7 @@ public class GameManager : MonoBehaviour
                     {
                         Floor floor = hit.transform.GetComponent<Floor>();
                         index = floor.floorIndex;
-                        if (field[index] == 0)
-                        {
-                            floor.SetCircle(curPlayer);
-                            field[index] = curPlayer + 1;
-                            if (curPlayer == 0) player1_Arr.SetValue(1, index);
-                            else player2_Arr.SetValue(1, index);
-                            AudioManager.audioManager.PlaySfx((AudioManager.Sfx)curPlayer);
-                            ++playersCount[curPlayer];
-
-                            if (playersCount[curPlayer] > 5)
-                            {
-                                CheckVictory(curPlayer);
-                            }
-
-                            if (isPlaying) ChangeTurn(curPlayer);
-                        }
+                        CreateCircle(index);
                     }
                 }
                 else
