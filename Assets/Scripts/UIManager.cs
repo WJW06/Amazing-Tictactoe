@@ -9,9 +9,20 @@ public class UIManager : MonoBehaviour
     public static UIManager uiManager;
 
     public GameObject playGround;
+    public Button start_Button;
+    public Button setting_Button;
+    public GameObject setting_Interface;
+    public Toggle fullScreen_Toggle;
+    public Dropdown resolution_Dropdown;
+    public Slider bgm_Slider;
+    public Slider sfx_Slider;
+    public InputField bgm_Input;
+    public InputField sfx_Input;
+    public float[] temp_Setting;
+    public Button exit_Button;
     public Button battleMode_Button;
     public Button aiMode_Button;
-    public Button start_Button;
+    public Button back_Button;
     public Button restart_Button;
     public Button[] item_Buttons;
     public Image[] enemyItems;
@@ -24,10 +35,13 @@ public class UIManager : MonoBehaviour
     Color player2_Color = new Color(0, 100, 255);
     float time;
     bool isPlaying;
+    bool isFullScreen = true;
 
     void Awake()
     {
         uiManager = this;
+        temp_Setting = new float[4];
+        SetResolution((int)PlayerPrefs.GetFloat("Resolution"));
     }
 
     void Update()
@@ -43,9 +57,123 @@ public class UIManager : MonoBehaviour
     
     public void StartButton()
     {
-        battleMode_Button.gameObject.SetActive(true);
-        aiMode_Button.gameObject.SetActive(true);
-        start_Button.gameObject.SetActive(false);
+        MainButton(false);
+        SubButton(true);
+    }
+
+    public void SettingButton()
+    {
+        MainButton(false);
+        setting_Interface.SetActive(true);
+        temp_Setting[0] = PlayerPrefs.HasKey("FullScreen") ? PlayerPrefs.GetInt("FullScreen") : 1;
+        temp_Setting[1] = PlayerPrefs.HasKey("Resolution") ? PlayerPrefs.GetFloat("Resolution") : 0;
+        temp_Setting[2] = PlayerPrefs.HasKey("BGM") ? PlayerPrefs.GetFloat("BGM") : 10;
+        temp_Setting[3] = PlayerPrefs.HasKey("SFX") ? PlayerPrefs.GetFloat("SFX") : 10;
+        fullScreen_Toggle.isOn = temp_Setting[0] == 1;
+        resolution_Dropdown.value = (int)temp_Setting[1];
+        bgm_Input.text = temp_Setting[2].ToString();
+        sfx_Input.text = temp_Setting[3].ToString();
+    }
+
+    public void SetFullScreen()
+    {
+        isFullScreen = fullScreen_Toggle.isOn;
+        SetResolution(resolution_Dropdown.value);
+    }
+
+    public void SetResolution(int value)
+    {
+        switch (value)
+        {
+            case 0:
+                Screen.SetResolution(1920, 1200, isFullScreen);
+                break;
+            case 1:
+                Screen.SetResolution(1920, 1080, isFullScreen);
+                break;
+            case 2:
+                Screen.SetResolution(1680, 1050, isFullScreen);
+                break;
+            case 3:
+                Screen.SetResolution(1600, 900, isFullScreen);
+                break;
+            case 4:
+                Screen.SetResolution(1400, 1050, isFullScreen);
+                break;
+            case 5:
+                Screen.SetResolution(1280, 1024, isFullScreen);
+                break;
+            case 6:
+                Screen.SetResolution(1280, 720, isFullScreen);
+                break;
+            case 7:
+                Screen.SetResolution(1024, 768, isFullScreen);
+                break;
+            case 8:
+                Screen.SetResolution(800, 600, isFullScreen);
+                break;
+            case 9:
+                Screen.SetResolution(640, 480, isFullScreen);
+                break;
+        }
+    }
+
+    public void SlideBGM()
+    {
+        bgm_Slider.value = Mathf.FloorToInt(bgm_Slider.value);
+        bgm_Input.text = bgm_Slider.value.ToString();
+        AudioManager.audioManager.ChangeBGMVolume(float.Parse(bgm_Input.text) / 10);
+    }
+
+    public void InputBGM()
+    {
+        bgm_Slider.value = float.Parse(bgm_Input.text);
+        AudioManager.audioManager.ChangeBGMVolume(float.Parse(bgm_Input.text) / 10);
+    }
+
+    public void SlideSFX()
+    {
+        sfx_Slider.value = Mathf.FloorToInt(sfx_Slider.value);
+        sfx_Input.text = sfx_Slider.value.ToString();
+        AudioManager.audioManager.ChangeSFXVolume(float.Parse(sfx_Input.text) / 10);
+    }
+
+    public void InputSFX()
+    {
+        sfx_Slider.value = float.Parse(sfx_Input.text);
+        AudioManager.audioManager.ChangeSFXVolume(float.Parse(sfx_Input.text) / 10);
+    }
+
+    public void CancleButton()
+    {
+        setting_Interface.SetActive(false);
+        MainButton(true);
+        isFullScreen = temp_Setting[0] == 1 ? true : false;
+        SetResolution((int)temp_Setting[1]);
+        AudioManager.audioManager.ChangeBGMVolume(temp_Setting[2]);
+        AudioManager.audioManager.ChangeSFXVolume(temp_Setting[3]);
+    }
+
+    public void ConfirmButton()
+    {
+        setting_Interface.SetActive(false);
+        MainButton(true);
+        PlayerPrefs.SetInt("FullScreen", isFullScreen == true ? 1 : 0);
+        PlayerPrefs.SetFloat("Resolution", resolution_Dropdown.value);
+        PlayerPrefs.SetFloat("BGM", float.Parse(bgm_Input.text));
+        PlayerPrefs.SetFloat("SFX", float.Parse(sfx_Input.text));
+    }
+
+    public void ExitButton()
+    {
+        Application.Quit();
+    }
+
+    void MainButton(bool active)
+    {
+        start_Button.gameObject.SetActive(active);
+        setting_Button.gameObject.SetActive(active);
+        exit_Button.gameObject.SetActive(active);
     }
 
     public void AIMode()
@@ -60,9 +188,23 @@ public class UIManager : MonoBehaviour
         GameStart();
     }
 
+    public void BackButton()
+    {
+        SubButton(false);
+        MainButton(true);
+    }
+
+    void SubButton(bool active)
+    {
+        battleMode_Button.gameObject.SetActive(active);
+        aiMode_Button.gameObject.SetActive(active);
+        back_Button.gameObject.SetActive(active);
+    }
+
     public void GameStart()
     {
         GameManager.gameManager.InitField();
+        SubButton(false);
         playGround.SetActive(true);
         timeText.gameObject.SetActive(true);
         playerColor.gameObject.SetActive(true);
@@ -76,10 +218,7 @@ public class UIManager : MonoBehaviour
         ChangeUI(1);
         time = 0;
         isPlaying = true;
-        start_Button.gameObject.SetActive(false);
-        battleMode_Button.gameObject.SetActive(false);
-        aiMode_Button.gameObject.SetActive(false);
-        AudioManager.audioManager.PlaySfx(AudioManager.Sfx.Hammer);
+        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Hammer);
     }
 
     public void GameEnd(int winner)
@@ -104,14 +243,14 @@ public class UIManager : MonoBehaviour
     public void GameRestart()
     {
         GameManager.gameManager.ClearField();
-        messageBanner.gameObject.SetActive(false);
         timeText.gameObject.SetActive(false);
-        playerColor.gameObject.SetActive(false);
-        start_Button.gameObject.SetActive(true);
         restart_Button.gameObject.SetActive(false);
         playGround.SetActive(false);
-        AudioManager.audioManager.PlaySfx(AudioManager.Sfx.Hammer);
-        AudioManager.audioManager.PlayBgm(true);
+        playerColor.gameObject.SetActive(false);
+        MainButton(true);
+        messageBanner.gameObject.SetActive(false);
+        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Hammer);
+        AudioManager.audioManager.PlayBGM(true);
     }
 
     public void SetItemImage(int curPlayer, int index)

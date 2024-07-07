@@ -19,7 +19,7 @@ public class AudioManager : MonoBehaviour
     AudioSource[] sfxPlayers;
     int channelIndex;
 
-    public enum Sfx
+    public enum SFX
     {
         Player1,
         Player2,
@@ -35,8 +35,10 @@ public class AudioManager : MonoBehaviour
     private void Awake()
     {
         audioManager = this;
+        bgmVolume = PlayerPrefs.HasKey("BGM") ? PlayerPrefs.GetFloat("BGM") / 10 : 1;
+        sfxVolume = PlayerPrefs.HasKey("SFX") ? PlayerPrefs.GetFloat("SFX") / 10 : 1;
         Init();
-    }
+    }   
 
     void Init()
     {
@@ -58,16 +60,16 @@ public class AudioManager : MonoBehaviour
             sfxPlayers[i].volume = sfxVolume;
         }
 
-        PlayBgm(true);
+        PlayBGM(true);
     }
 
-    public void PlayBgm(bool isPlay)
+    public void PlayBGM(bool isPlay)
     {
         if (isPlay) bgmPlayer.Play();
         else bgmPlayer.Stop();
     }
 
-    public void PlaySfx(Sfx sfx)
+    public void PlaySFX(SFX sfx)
     {
         for (int i = 0; i < channels; ++i)
         {
@@ -77,10 +79,25 @@ public class AudioManager : MonoBehaviour
 
             channelIndex = loopIndex;
             sfxPlayers[channelIndex].clip = sfxClips[(int)sfx];
-            if (sfx == Sfx.WildCard) sfxPlayers[channelIndex].pitch = 2;
+            if (sfx == SFX.WildCard) sfxPlayers[channelIndex].pitch = 2;
             else sfxPlayers[channelIndex].pitch = 1;
             sfxPlayers[channelIndex].Play();
             break;
+        }
+    }
+
+    public void ChangeBGMVolume(float volume)
+    {
+        bgmVolume = volume;
+        bgmPlayer.volume = bgmVolume;
+    }
+
+    public void ChangeSFXVolume(float volume)
+    {
+        sfxVolume = volume;
+        for (int i = 0; i < channels; ++i)
+        {
+            sfxPlayers[i].volume = sfxVolume;
         }
     }
 }

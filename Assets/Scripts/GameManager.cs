@@ -99,7 +99,7 @@ public class GameManager : MonoBehaviour
             field[index] = curPlayer + 1;
             if (curPlayer == 0) player1_Arr.SetValue(1, index);
             else player2_Arr.SetValue(1, index);
-            AudioManager.audioManager.PlaySfx((AudioManager.Sfx)curPlayer);
+            AudioManager.audioManager.PlaySFX((AudioManager.SFX)curPlayer);
             ++playersCount[curPlayer];
 
             if (playersCount[curPlayer] > 5)
@@ -195,8 +195,8 @@ public class GameManager : MonoBehaviour
             Debug.Log("플레이어" + curPlayer + " 승!");
             isPlaying = false;
             UIManager.uiManager.GameEnd(curPlayer);
-            AudioManager.audioManager.PlaySfx(AudioManager.Sfx.Win);
-            AudioManager.audioManager.PlayBgm(false);
+            AudioManager.audioManager.PlaySFX(AudioManager.SFX.Win);
+            AudioManager.audioManager.PlayBGM(false);
         }
     }
 
@@ -257,7 +257,7 @@ public class GameManager : MonoBehaviour
         isUsingItem = !isUsingItem;
         curItemIndex = index;
         UIManager.uiManager.UsingItem(index, isUsingItem);
-        AudioManager.audioManager.PlaySfx(AudioManager.Sfx.Item);
+        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Item);
         ClearFieldDecal();
     }
 
