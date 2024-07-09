@@ -15,7 +15,8 @@ public class GameManager : MonoBehaviour
     public int[] field;
     public int[] player1_Arr;
     public int[] player2_Arr;
-    int[] playersCount;
+    public int[] playersCount;
+    public int[] itemsCount;
     int[,] victoryCases;
     public Item[] player1_Items;
     public Item[] player2_Items;
@@ -36,6 +37,7 @@ public class GameManager : MonoBehaviour
         player2_Arr = new int[36];
         playersCount = new int[2];
         playerItemCount = new int[2];
+        itemsCount = new int[2];
 
         victoryCases = new int[,] {
             { 0, 1, 2, 3, 4, 5 },
@@ -163,11 +165,13 @@ public class GameManager : MonoBehaviour
         UIManager.uiManager.ChangeUI(curPlayer);
         if (curPlayer == 0 && playerItemCount[0] == 0)
         {
-            CreateItems(0);
+            if (itemsCount[0] == 0) CreateItems(0);
+            else --itemsCount[0];
         }
         else if (curPlayer == 1 && playerItemCount[1] == 0)
         {
-            CreateItems(1);
+            if (itemsCount[1] == 0) CreateItems(1);
+            else --itemsCount[1];
         }
         ++turn;
     }
@@ -206,12 +210,14 @@ public class GameManager : MonoBehaviour
         if (player == 0)
         {
             items = player1_Items;
-            playerItemCount[0] = 3;   
+            playerItemCount[0] = 3;
+            itemsCount[0] = 2;
         }
         else
         {
             items = player2_Items;
             playerItemCount[1] = 3;   
+            itemsCount[1] = 2;
         }
 
         for (int i = 0; i < 3; ++i)
@@ -283,8 +289,8 @@ public class GameManager : MonoBehaviour
         int curPlayer = floor.UnSetCircle();
         if (curPlayer == 0) player1_Arr[index] = 0;
         else player2_Arr[index] = 0;
-        playersCount[curPlayer] = 0;
         field[index] = 0;
+        --playersCount[curPlayer];
     }
 
     public void ChangeCircle(int index)

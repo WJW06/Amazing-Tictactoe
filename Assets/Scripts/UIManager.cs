@@ -34,6 +34,7 @@ public class UIManager : MonoBehaviour
     Color player1_Color = new Color(255, 0, 0);
     Color player2_Color = new Color(0, 100, 255);
     float time;
+    float prevSFX;
     bool isPlaying;
     bool isFullScreen = true;
 
@@ -54,7 +55,7 @@ public class UIManager : MonoBehaviour
             timeText.text = string.Format("Time: {0:D2}:{1:D2}", min, sec);
         }
     }
-    
+
     public void StartButton()
     {
         MainButton(false);
@@ -73,6 +74,7 @@ public class UIManager : MonoBehaviour
         resolution_Dropdown.value = (int)temp_Setting[1];
         bgm_Input.text = temp_Setting[2].ToString();
         sfx_Input.text = temp_Setting[3].ToString();
+        prevSFX = temp_Setting[3];
     }
 
     public void SetFullScreen()
@@ -127,6 +129,7 @@ public class UIManager : MonoBehaviour
 
     public void InputBGM()
     {
+        if (bgm_Input.text == "") bgm_Input.text = "0";
         bgm_Slider.value = float.Parse(bgm_Input.text);
         AudioManager.audioManager.ChangeBGMVolume(float.Parse(bgm_Input.text) / 10);
     }
@@ -136,12 +139,16 @@ public class UIManager : MonoBehaviour
         sfx_Slider.value = Mathf.FloorToInt(sfx_Slider.value);
         sfx_Input.text = sfx_Slider.value.ToString();
         AudioManager.audioManager.ChangeSFXVolume(float.Parse(sfx_Input.text) / 10);
+        if (prevSFX != sfx_Slider.value) AudioManager.audioManager.PlaySFX(AudioManager.SFX.Hammer);
+        prevSFX = sfx_Slider.value;
     }
 
     public void InputSFX()
     {
+        if (sfx_Input.text == "") sfx_Input.text = "0";
         sfx_Slider.value = float.Parse(sfx_Input.text);
         AudioManager.audioManager.ChangeSFXVolume(float.Parse(sfx_Input.text) / 10);
+        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Hammer);
     }
 
     public void CancleButton()
@@ -150,8 +157,8 @@ public class UIManager : MonoBehaviour
         MainButton(true);
         isFullScreen = temp_Setting[0] == 1 ? true : false;
         SetResolution((int)temp_Setting[1]);
-        AudioManager.audioManager.ChangeBGMVolume(temp_Setting[2]);
-        AudioManager.audioManager.ChangeSFXVolume(temp_Setting[3]);
+        AudioManager.audioManager.ChangeBGMVolume(temp_Setting[2] / 10);
+        AudioManager.audioManager.ChangeSFXVolume(temp_Setting[3] / 10);
     }
 
     public void ConfirmButton()
