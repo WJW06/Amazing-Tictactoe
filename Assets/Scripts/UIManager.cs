@@ -185,13 +185,13 @@ public class UIManager : MonoBehaviour
 
     public void AIMode()
     {
-        GameManager.gameManager.isPlayerBattle = false;
+        GameManager.gameManager.isAIBattle= true;
         GameStart();
     }
 
     public void BattleMode()
     {
-        GameManager.gameManager.isPlayerBattle = true;
+        GameManager.gameManager.isAIBattle = false;
         GameStart();
     }
 
@@ -242,7 +242,8 @@ public class UIManager : MonoBehaviour
         messageBanner.gameObject.SetActive(true);
         string winPlayer;
         if (winner == 0) winPlayer = "Player1 Win!";
-        else winPlayer = "Player2 Win!";
+        else if (winner == 1) winPlayer = "Player2 Win!";
+        else winPlayer = "-Draw-";
         messageText.text = winPlayer;
         isPlaying = false;
     }

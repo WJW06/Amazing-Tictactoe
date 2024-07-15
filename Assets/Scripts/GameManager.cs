@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using Unity.VisualScripting;
 using UnityEngine;
 using static UnityEditor.FilePathAttribute;
 
@@ -9,7 +10,7 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager gameManager;
 
-    public bool isPlayerBattle;
+    public bool isAIBattle;
     public int turn = 0;
     public Floor[] floors;
     public int[] field;
@@ -17,7 +18,7 @@ public class GameManager : MonoBehaviour
     public int[] player2_Arr;
     public int[] playersCount;
     public int[] itemsCount;
-    int[,] victoryCases;
+    public int[,] victoryCases;
     public Item[] player1_Items;
     public Item[] player2_Items;
     bool isUsingItem = false;
@@ -113,8 +114,19 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    void AIThink()
+    {
+        BattleAI.battleAI.Think();
+        CancelInvoke("AIThink");
+    }
+
     void ClickFeild()
     {
+        if (isAIBattle && turn % 2 == 1)
+        {
+            Invoke("AIThink", 0.5f);
+            return;
+        }
         if (Input.GetMouseButtonDown(0))
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -172,6 +184,15 @@ public class GameManager : MonoBehaviour
         {
             if (itemsCount[1] == 0) CreateItems(1);
             else --itemsCount[1];
+        }
+
+        if (playersCount[0] + playersCount[1] >= 36)
+        {
+            Debug.Log("무승부");
+            isPlaying = false;
+            UIManager.uiManager.GameEnd(2);
+            AudioManager.audioManager.PlaySFX(AudioManager.SFX.Win);
+            AudioManager.audioManager.PlayBGM(false);
         }
         ++turn;
     }
