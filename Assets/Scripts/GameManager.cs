@@ -26,6 +26,7 @@ public class GameManager : MonoBehaviour
     int curItemIndex;
     int curDecalIndex = -1;
     int[] playerItemCount;
+    public bool isUsingHandGun = false;
     bool isPlaying = false;
     WaitForSeconds startDelay = new WaitForSeconds(0.1f);
 
@@ -122,6 +123,7 @@ public class GameManager : MonoBehaviour
 
     void ClickFeild()
     {
+        if (isUsingHandGun) return;
         if (isAIBattle && turn % 2 == 1)
         {
             Invoke("AIThink", 0.5f);
@@ -163,8 +165,8 @@ public class GameManager : MonoBehaviour
                         else if (curPlayer == 1) player2_Items[curItemIndex].OnAblity(index);
 
                         UseItem(curItemIndex);
-                        UsedItem(curPlayer, curItemIndex);
-                        if (isPlaying) ChangeTurn(curPlayer);
+                        UsedItem(turn % 2, curItemIndex);
+                        if (isPlaying) ChangeTurn(turn % 2);
                     }
                 }
             }
@@ -272,7 +274,7 @@ public class GameManager : MonoBehaviour
 
     public void UseItem(int index)
     {
-        if (isUsedItem) return;
+        if (isUsedItem || (turn % 2 == 1 && isAIBattle)) return;
         if (turn % 2 == 0 && player1_Items[index].isUsed) return;
         else if (turn % 2 == 1 && player2_Items[index].isUsed) return;
 

@@ -124,8 +124,9 @@ public class Item : MonoBehaviour
 
     IEnumerator HandGunCoroutine(int[] indexs)
     {
+        gameManager.isUsingHandGun = true;
         foreach (int index in indexs)
-        {
+        {   
             if (gameManager.field[index] != 0)
             {
                 gameManager.DestroyCircle(index);
@@ -135,6 +136,7 @@ public class Item : MonoBehaviour
             GameManager.gameManager.floors[index].ShotParticle();
             yield return handGunSecond;
         }
+        gameManager.isUsingHandGun = false;
     }
 
     IEnumerator ChangeFieldColor(int index)
