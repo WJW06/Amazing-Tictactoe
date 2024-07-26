@@ -186,6 +186,7 @@ public class UIManager : MonoBehaviour
     public void AIMode()
     {
         GameManager.gameManager.isAIBattle= true;
+        //BattleAI.battleAI.ClearExcludedCases();
         GameStart();
     }
 
