@@ -4001,7 +4001,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07402767aa1604444960649f12de0443, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isPlayerBattle: 0
+  isAIBattle: 0
   turn: 0
   floors:
   - {fileID: 1525426631}
@@ -4053,6 +4053,7 @@ MonoBehaviour:
   - {fileID: 249766880}
   - {fileID: 727638459}
   - {fileID: 765555001}
+  isUsingHandGun: 0
 --- !u!65 &652621031
 BoxCollider:
   m_ObjectHideFlags: 0

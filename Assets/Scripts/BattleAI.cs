@@ -13,6 +13,7 @@ public class BattleAI : MonoBehaviour
     int maxCount_Player2;
     int maxCase_Player1;
     int maxCase_Player2;
+    int item_Index;
     int hammer_Index;
     int handGun_Index;
     int shotGun_Index;
@@ -28,22 +29,43 @@ public class BattleAI : MonoBehaviour
     public void Think()
     {
         index = -1;
+        item_Index = -1;
 
         CountingPlayer1();
         CountingPlayer2();
         CheckItems();
 
-        Debug.Log("maxCount_P1: "+maxCount_Player1);
-        Debug.Log("maxCount_P2: "+maxCount_Player2);
+        //Debug.Log("maxCount_P1: "+maxCount_Player1);
+        //Debug.Log("maxCount_P2: "+maxCount_Player2);
         if (wildCard_Index != -1)
         {
             UseWildCard();
-            if (index != -1)
+            if (item_Index != -1)
             {
                 UseItem(wildCard_Index);
                 return;
             }
         }
+        else if (gameManager.playersCount[0] >= 3 && gameManager.playersCount[0] > gameManager.playersCount[1])
+        {
+            FindItemIndex();
+            if (hammer_Index != -1 && item_Index != -1)
+            {
+                UseItem(hammer_Index);
+                return;
+            }
+            else if (shotGun_Index != -1 && item_Index != -1)
+            {
+                UseItem(shotGun_Index);
+                return;
+            }
+            else if (handGun_Index != -1)
+            {
+                UseItem(handGun_Index);
+                return;
+            }
+        }
+
         if (maxCount_Player1 >= 4 && maxCount_Player1 > maxCount_Player2)
         {
             BlockingCircle();
@@ -88,7 +110,7 @@ public class BattleAI : MonoBehaviour
 
         if (maxCase_Player1 == -1) return;
 
-        Debug.Log("maxCase_P1:" + maxCase_Player1);
+        //Debug.Log("maxCase_P1:" + maxCase_Player1);
     }
 
     void CountingPlayer2()
@@ -120,7 +142,7 @@ public class BattleAI : MonoBehaviour
 
         if (maxCase_Player2 == -1) return;
 
-        Debug.Log("maxCase_P2:" + maxCase_Player2);
+        //Debug.Log("maxCase_P2:" + maxCase_Player2);
     }
 
     void CheckItems()
@@ -131,6 +153,7 @@ public class BattleAI : MonoBehaviour
         wildCard_Index = -1;
         for (int i = 0; i < gameManager.player2_Items.Length; ++i)
         {
+            if (gameManager.player2_Items[i].isUsed) continue;
             switch (gameManager.player2_Items[i].itemType)
             {
                 case Item.Type.Hammer:
@@ -146,6 +169,59 @@ public class BattleAI : MonoBehaviour
                     wildCard_Index = i;
                     break;
             }
+        }
+    }
+
+    void FindItemIndex()
+    {
+        int maxPlayer1_Count = 0;
+
+        for (int i = 0; i < 36; ++i)
+        {
+            int player1_Count = 0;
+            int player2_Count = 0;
+
+            for (int j = -1; j < 2; ++j)
+            {
+                int index = i + (6 * j);
+                if (index - 1 > -1 && index - 1 < 35 && index % 6 > 0)
+                {
+                    if (gameManager.field[index - 1] == 1)
+                        ++player1_Count;
+                    else if (gameManager.field[index - 1] == 2)
+                        ++player2_Count;
+                }
+                if (index > -1 && index < 36)
+                {
+                    if (gameManager.field[index] == 1)
+                        ++player1_Count;
+                    else if (gameManager.field[index] == 2)
+                        ++player2_Count;
+                }
+                if (index + 1 > 0 && index + 1 < 36 && index % 6 < 5)
+                {
+                    if (gameManager.field[index + 1] == 1)
+                        ++player1_Count;
+                    else if (gameManager.field[index + 1] == 2)
+                        ++player2_Count;
+                }
+            }
+
+            if (player1_Count >= 3)
+            {
+                if (maxPlayer1_Count < player1_Count - player2_Count)
+                {
+                    maxPlayer1_Count = player1_Count;
+                    item_Index = i;
+                }
+                else if (maxPlayer1_Count < player1_Count)
+                {
+                    maxPlayer1_Count = player1_Count;
+                    item_Index = i;
+                }
+            }
+            Debug.Log(maxPlayer1_Count);
+            Debug.Log(item_Index);
         }
     }
 
@@ -183,7 +259,7 @@ public class BattleAI : MonoBehaviour
 
     void UseItem(int type)
     {
-        gameManager.player2_Items[type].OnAblity(index);
+        gameManager.player2_Items[type].OnAblity(item_Index);
 
         gameManager.UseItem(type);
         gameManager.UsedItem(1, type);
@@ -212,7 +288,7 @@ public class BattleAI : MonoBehaviour
             }
             if (count_Player2 == 5)
             {
-                index = temp_Index;
+                item_Index = temp_Index;
                 return;
             }
         }
@@ -230,7 +306,7 @@ public class BattleAI : MonoBehaviour
             }
             if (count_Player1 == 5)
             {
-                index = temp_Index;
+                item_Index = temp_Index;
                 return;
             }
         }
