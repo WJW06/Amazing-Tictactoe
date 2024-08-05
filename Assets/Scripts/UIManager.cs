@@ -9,6 +9,7 @@ public class UIManager : MonoBehaviour
     public static UIManager uiManager;
 
     public GameObject playGround;
+    public Text logo;
     public Button start_Button;
     public Button setting_Button;
     public GameObject setting_Interface;
@@ -58,13 +59,13 @@ public class UIManager : MonoBehaviour
 
     public void StartButton()
     {
-        MainButton(false);
+        MainUI(false);
         SubButton(true);
     }
 
     public void SettingButton()
     {
-        MainButton(false);
+        MainUI(false);
         setting_Interface.SetActive(true);
         temp_Setting[0] = PlayerPrefs.HasKey("FullScreen") ? PlayerPrefs.GetInt("FullScreen") : 1;
         temp_Setting[1] = PlayerPrefs.HasKey("Resolution") ? PlayerPrefs.GetFloat("Resolution") : 0;
@@ -154,7 +155,7 @@ public class UIManager : MonoBehaviour
     public void CancleButton()
     {
         setting_Interface.SetActive(false);
-        MainButton(true);
+        MainUI(true);
         isFullScreen = temp_Setting[0] == 1 ? true : false;
         SetResolution((int)temp_Setting[1]);
         AudioManager.audioManager.ChangeBGMVolume(temp_Setting[2] / 10);
@@ -164,7 +165,7 @@ public class UIManager : MonoBehaviour
     public void ConfirmButton()
     {
         setting_Interface.SetActive(false);
-        MainButton(true);
+        MainUI(true);
         PlayerPrefs.SetInt("FullScreen", isFullScreen == true ? 1 : 0);
         PlayerPrefs.SetFloat("Resolution", resolution_Dropdown.value);
         PlayerPrefs.SetFloat("BGM", float.Parse(bgm_Input.text));
@@ -176,8 +177,9 @@ public class UIManager : MonoBehaviour
         Application.Quit();
     }
 
-    void MainButton(bool active)
+    void MainUI(bool active)
     {
+        logo.gameObject.SetActive(active);
         start_Button.gameObject.SetActive(active);
         setting_Button.gameObject.SetActive(active);
         exit_Button.gameObject.SetActive(active);
@@ -198,7 +200,7 @@ public class UIManager : MonoBehaviour
     public void BackButton()
     {
         SubButton(false);
-        MainButton(true);
+        MainUI(true);
     }
 
     void SubButton(bool active)
@@ -255,7 +257,7 @@ public class UIManager : MonoBehaviour
         restart_Button.gameObject.SetActive(false);
         playGround.SetActive(false);
         playerColor.gameObject.SetActive(false);
-        MainButton(true);
+        MainUI(true);
         messageBanner.gameObject.SetActive(false);
         AudioManager.audioManager.PlaySFX(AudioManager.SFX.Hammer);
         AudioManager.audioManager.PlayBGM(true);
