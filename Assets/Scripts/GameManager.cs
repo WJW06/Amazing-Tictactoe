@@ -173,7 +173,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void ChangeTurn(int curPlayer)
+    public void ChangeTurn(int curPlayer)
     {
         isUsedItem = false;
         UIManager.uiManager.ChangeUI(curPlayer);
@@ -290,7 +290,7 @@ public class GameManager : MonoBehaviour
         ClearFieldDecal();
     }
 
-    void UsedItem(int curPlayer,int index)
+    public void UsedItem(int curPlayer,int index)
     {
         isUsedItem = true;
         if (turn % 2 == 0)
