@@ -18,8 +18,7 @@ public class BattleAI : MonoBehaviour
     int handGun_Index;
     int shotGun_Index;
     int wildCard_Index;
-    //int[] player1_Excluded;
-    //int[] player2_Excluded;
+    int enemy_Count;
 
     void Awake()
     {
@@ -34,9 +33,8 @@ public class BattleAI : MonoBehaviour
         CountingPlayer1();
         CountingPlayer2();
         CheckItems();
+        FindItemIndex();
 
-        //Debug.Log("maxCount_P1: "+maxCount_Player1);
-        //Debug.Log("maxCount_P2: "+maxCount_Player2);
         if (wildCard_Index != -1)
         {
             UseWildCard();
@@ -46,7 +44,7 @@ public class BattleAI : MonoBehaviour
                 return;
             }
         }
-        else if (gameManager.playersCount[0] >= 3 && gameManager.playersCount[0] > gameManager.playersCount[1])
+        else if (gameManager.playersCount[0] >= 3 && (gameManager.playersCount[0] > gameManager.playersCount[1] || enemy_Count > 4))
         {
             FindItemIndex();
             if (hammer_Index != -1 && item_Index != -1)
@@ -83,7 +81,6 @@ public class BattleAI : MonoBehaviour
 
     void CountingPlayer1()
     {
-        //if (CheckPlayer1ExcludedCases()) return;
         maxCount_Player1 = 0;
         maxCase_Player1 = -1;
         for (int i = 0; i < 14; ++i)
@@ -109,13 +106,10 @@ public class BattleAI : MonoBehaviour
         }
 
         if (maxCase_Player1 == -1) return;
-
-        //Debug.Log("maxCase_P1:" + maxCase_Player1);
     }
 
     void CountingPlayer2()
     {
-        //if (CheckPlayer2ExcludedCases()) return;
         maxCount_Player2 = 0;
         maxCase_Player2 = -1;
         for (int i = 0; i < 14; ++i)
@@ -141,8 +135,6 @@ public class BattleAI : MonoBehaviour
         }
 
         if (maxCase_Player2 == -1) return;
-
-        //Debug.Log("maxCase_P2:" + maxCase_Player2);
     }
 
     void CheckItems()
@@ -174,7 +166,7 @@ public class BattleAI : MonoBehaviour
 
     void FindItemIndex()
     {
-        int maxPlayer1_Count = 0;
+        enemy_Count = 0;
 
         for (int i = 0; i < 36; ++i)
         {
@@ -209,25 +201,22 @@ public class BattleAI : MonoBehaviour
 
             if (player1_Count >= 3)
             {
-                if (maxPlayer1_Count < player1_Count - player2_Count)
+                if (enemy_Count < player1_Count - player2_Count)
                 {
-                    maxPlayer1_Count = player1_Count;
+                    enemy_Count = player1_Count;
                     item_Index = i;
                 }
-                else if (maxPlayer1_Count < player1_Count)
+                else if (enemy_Count < player1_Count)
                 {
-                    maxPlayer1_Count = player1_Count;
+                    enemy_Count = player1_Count;
                     item_Index = i;
                 }
             }
-            Debug.Log(maxPlayer1_Count);
-            Debug.Log(item_Index);
         }
     }
 
     void RandomIndex()
     {
-        Debug.Log("Random");
         while (true)
         {
             index = Random.Range(0, 36);
@@ -237,7 +226,6 @@ public class BattleAI : MonoBehaviour
 
     void ConnectionCircle()
     {
-        Debug.Log("Connection");
         for (int i = 0; i < 6; ++i)
         {
             if (gameManager.field[gameManager.victoryCases[maxCase_Player2, i]] == 2) continue;
@@ -248,7 +236,6 @@ public class BattleAI : MonoBehaviour
 
     void BlockingCircle()
     {
-        Debug.Log("Blocking");  
         for (int i = 0; i < 6; ++i)
         {
             if (gameManager.field[gameManager.victoryCases[maxCase_Player1, i]] == 1) continue;
@@ -268,6 +255,8 @@ public class BattleAI : MonoBehaviour
 
     void UseWildCard()
     {
+        item_Index = -1;
+
         int count_Player1;
         int count_Player2;
         int temp_Index = -1;
@@ -311,33 +300,4 @@ public class BattleAI : MonoBehaviour
             }
         }
     }
-
-    //bool CheckPlayer1ExcludedCases()
-    //{
-    //    for (int i = 0; i < player1_Excluded.Length; ++i)
-    //    {
-    //        if (player1_Excluded[i].Equals(1)) continue;
-    //        else return false;
-    //    }
-    //    return true;
-    //}
-
-    //bool CheckPlayer2ExcludedCases()
-    //{
-    //    for (int i = 0; i < player2_Excluded.Length; ++i)
-    //    {
-    //        if (player2_Excluded[i].Equals(1)) continue;
-    //        else return false;
-    //    }
-    //    return true;
-    //}
-
-    //public void ClearExcludedCases()
-    //{
-    //    for (int i = 0; i < 14; ++i)
-    //    {
-    //        player1_Excluded[i] = 0;
-    //        player2_Excluded[i] = 0;
-    //    }
-    //}
 }
