@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,8 +14,6 @@ public class UIManager : MonoBehaviour
     public Button start_Button;
     public Button setting_Button;
     public GameObject setting_Interface;
-    public Toggle fullScreen_Toggle;
-    public Dropdown resolution_Dropdown;
     public Slider bgm_Slider;
     public Slider sfx_Slider;
     public InputField bgm_Input;
@@ -71,17 +70,9 @@ public class UIManager : MonoBehaviour
         temp_Setting[1] = PlayerPrefs.HasKey("Resolution") ? PlayerPrefs.GetFloat("Resolution") : 0;
         temp_Setting[2] = PlayerPrefs.HasKey("BGM") ? PlayerPrefs.GetFloat("BGM") : 10;
         temp_Setting[3] = PlayerPrefs.HasKey("SFX") ? PlayerPrefs.GetFloat("SFX") : 10;
-        fullScreen_Toggle.isOn = temp_Setting[0] == 1;
-        resolution_Dropdown.value = (int)temp_Setting[1];
         bgm_Input.text = temp_Setting[2].ToString();
         sfx_Input.text = temp_Setting[3].ToString();
         prevSFX = temp_Setting[3];
-    }
-
-    public void SetFullScreen()
-    {
-        isFullScreen = fullScreen_Toggle.isOn;
-        SetResolution(resolution_Dropdown.value);
     }
 
     public void SetResolution(int value)
@@ -167,7 +158,6 @@ public class UIManager : MonoBehaviour
         setting_Interface.SetActive(false);
         MainUI(true);
         PlayerPrefs.SetInt("FullScreen", isFullScreen == true ? 1 : 0);
-        PlayerPrefs.SetFloat("Resolution", resolution_Dropdown.value);
         PlayerPrefs.SetFloat("BGM", float.Parse(bgm_Input.text));
         PlayerPrefs.SetFloat("SFX", float.Parse(sfx_Input.text));
     }
@@ -179,7 +169,6 @@ public class UIManager : MonoBehaviour
 
     void MainUI(bool active)
     {
-        logo.gameObject.SetActive(active);
         start_Button.gameObject.SetActive(active);
         setting_Button.gameObject.SetActive(active);
         exit_Button.gameObject.SetActive(active);
@@ -214,6 +203,7 @@ public class UIManager : MonoBehaviour
     {
         GameManager.gameManager.InitField();
         SubButton(false);
+        logo.gameObject.SetActive(false);
         playGround.SetActive(true);
         timeText.gameObject.SetActive(true);
         playerColor.gameObject.SetActive(true);
