@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
-using static UnityEditor.FilePathAttribute;
 
 public class Item : MonoBehaviour
 {

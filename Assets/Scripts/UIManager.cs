@@ -23,7 +23,7 @@ public class UIManager : MonoBehaviour
     public Button battleMode_Button;
     public Button aiMode_Button;
     public Button back_Button;
-    public Button restart_Button;
+    public Button home_Button;
     public Button[] item_Buttons;
     public Image[] enemyItems;
     public Sprite[] itemSprite;
@@ -31,6 +31,7 @@ public class UIManager : MonoBehaviour
     public Text messageText;
     public Text timeText;
     public Image playerColor;
+    public Button confirm_Button;
     Color player1_Color = new Color(255, 0, 0);
     Color player2_Color = new Color(0, 100, 255);
     float time;
@@ -42,7 +43,7 @@ public class UIManager : MonoBehaviour
     {
         uiManager = this;
         temp_Setting = new float[4];
-        SetResolution((int)PlayerPrefs.GetFloat("Resolution"));
+        //SetResolution((int)PlayerPrefs.GetFloat("Resolution"));
     }
 
     void Update()
@@ -148,7 +149,7 @@ public class UIManager : MonoBehaviour
         setting_Interface.SetActive(false);
         MainUI(true);
         isFullScreen = temp_Setting[0] == 1 ? true : false;
-        SetResolution((int)temp_Setting[1]);
+        //SetResolution((int)temp_Setting[1]);
         AudioManager.audioManager.ChangeBGMVolume(temp_Setting[2] / 10);
         AudioManager.audioManager.ChangeSFXVolume(temp_Setting[3] / 10);
     }
@@ -222,7 +223,6 @@ public class UIManager : MonoBehaviour
 
     public void GameEnd(int winner)
     {
-        restart_Button.gameObject.SetActive(true);
         foreach (Button button in item_Buttons)
         {
             button.gameObject.SetActive(false);
@@ -231,6 +231,9 @@ public class UIManager : MonoBehaviour
         {
             enemyItem.gameObject.SetActive(false);
         }
+        playerColor.gameObject.SetActive(false);
+
+        home_Button.gameObject.SetActive(true);
         messageBanner.gameObject.SetActive(true);
         string winPlayer;
         if (winner == 0) winPlayer = "Player1 Win!";
@@ -240,13 +243,14 @@ public class UIManager : MonoBehaviour
         isPlaying = false;
     }
 
-    public void GameRestart()
+    public void GoHome()
     {
         GameManager.gameManager.ClearField();
         timeText.gameObject.SetActive(false);
-        restart_Button.gameObject.SetActive(false);
+        home_Button.gameObject.SetActive(false);
         playGround.SetActive(false);
         playerColor.gameObject.SetActive(false);
+        logo.gameObject.SetActive(true);
         MainUI(true);
         messageBanner.gameObject.SetActive(false);
         AudioManager.audioManager.PlaySFX(AudioManager.SFX.Hammer);
