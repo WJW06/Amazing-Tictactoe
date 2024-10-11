@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,20 +10,28 @@ public class UIManager : MonoBehaviour
     public static UIManager uiManager;
 
     public GameObject playGround;
+
     public Text logo;
-    public Button start_Button;
-    public Button setting_Button;
+    public Button first_Button;
+    public Button second_Button;
+    public Button third_Button;
+    public Button fourth_Button;
+    public Button fifth_Button;
+    int situation = 0;
+
     public GameObject setting_Interface;
+    public Toggle fullScreen_Toggle;
+    public Dropdown resolution_Dropdown;
     public Slider bgm_Slider;
     public Slider sfx_Slider;
     public InputField bgm_Input;
     public InputField sfx_Input;
     public float[] temp_Setting;
-    public Button exit_Button;
-    public Button battleMode_Button;
-    public Button aiMode_Button;
-    public Button back_Button;
-    public Button home_Button;
+
+    public Text name_Text;
+    public InputField name_Input;
+    string player_Name;
+
     public Button[] item_Buttons;
     public Image[] enemyItems;
     public Sprite[] itemSprite;
@@ -31,9 +39,10 @@ public class UIManager : MonoBehaviour
     public Text messageText;
     public Text timeText;
     public Image playerColor;
-    public Button confirm_Button;
     Color player1_Color = new Color(255, 0, 0);
     Color player2_Color = new Color(0, 100, 255);
+    public Button home_Button;
+
     float time;
     float prevSFX;
     bool isPlaying;
@@ -43,7 +52,7 @@ public class UIManager : MonoBehaviour
     {
         uiManager = this;
         temp_Setting = new float[4];
-        //SetResolution((int)PlayerPrefs.GetFloat("Resolution"));
+        SetResolution((int)PlayerPrefs.GetFloat("Resolution"));
     }
 
     void Update()
@@ -57,23 +66,139 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    public void StartButton()
+    void Situation0()
     {
-        MainUI(false);
-        SubButton(true);
+        situation = 0;
+        logo.gameObject.SetActive(true);
+        first_Button.gameObject.SetActive(true);
+        second_Button.gameObject.SetActive(true);
+        third_Button.gameObject.SetActive(true);
+        fourth_Button.gameObject.SetActive(false);
+        name_Text.gameObject.SetActive(false);
+        name_Input.gameObject.SetActive(false);
+
+        first_Button.GetComponentInChildren<Text>().text = "Start";
+        second_Button.GetComponentInChildren<Text>().text = "Setting";
+        third_Button.GetComponentInChildren<Text>().text = "Exit";
+    }
+
+    void Situation1()
+    {
+        situation = 1;
+        logo.gameObject.SetActive(false);
+        third_Button.gameObject.SetActive(true);
+        fourth_Button.gameObject.SetActive(true);
+        fifth_Button.gameObject.SetActive (false);
+        name_Text.gameObject.SetActive(true);
+        name_Input.gameObject.SetActive(true);
+
+        first_Button.GetComponentInChildren<Text>().text = "P1 vs AI";
+        second_Button.GetComponentInChildren<Text>().text = "P1 vs P2";
+        third_Button.GetComponentInChildren<Text>().text = "Back";
+        fourth_Button.GetComponentInChildren<Text>().text = "Join Server";
+    }
+
+    void Situation2()
+    {
+        situation = 2;
+        third_Button.gameObject.SetActive(false);
+        fifth_Button.gameObject.SetActive(true);
+        name_Text.gameObject.SetActive(false);
+        name_Input.gameObject.SetActive(false);
+        first_Button.GetComponentInChildren<Text>().fontSize = 26;
+        second_Button.GetComponentInChildren<Text>().fontSize = 26;
+
+        first_Button.GetComponentInChildren<Text>().text = "Join Room";
+        second_Button.GetComponentInChildren<Text>().text = "Disconnect";
+        fourth_Button.GetComponentInChildren<Text>().text = "Create Room";
+    }
+
+    public void FirstButton()
+    {
+        switch(situation)
+        {
+            case 0:
+                Situation1();
+                break;
+            case 1:
+                AIMode();
+                break;
+            case 2:
+                // Join Room
+                break;
+        }
+    }
+
+    public void SecondButton()
+    {
+        switch (situation)
+        {
+            case 0:
+                SettingButton();
+                break;
+            case 1:
+                BattleMode();
+                break;
+            case 2:
+                Disconnect();
+                break;
+        }
+    }
+
+    public void ThirdButton()
+    {
+        switch (situation)
+        {
+            case 0:
+                ExitButton();
+                break;
+            case 1:
+                Situation0();
+                break;
+        }
+    }
+
+    public void FourthButton()
+    {
+        switch (situation)
+        {
+            case 1:
+                JoinServer();
+                break;
+            case 2:
+                // Create Room
+                break;
+        }
+    }
+
+    public void FifthButton()
+    {
+        // Random Match
     }
 
     public void SettingButton()
     {
-        MainUI(false);
+        logo.gameObject.SetActive(false);
+        first_Button.gameObject.SetActive(false);
+        second_Button.gameObject.SetActive(false);
+        third_Button.gameObject.SetActive(false);
+
         setting_Interface.SetActive(true);
         temp_Setting[0] = PlayerPrefs.HasKey("FullScreen") ? PlayerPrefs.GetInt("FullScreen") : 1;
         temp_Setting[1] = PlayerPrefs.HasKey("Resolution") ? PlayerPrefs.GetFloat("Resolution") : 0;
         temp_Setting[2] = PlayerPrefs.HasKey("BGM") ? PlayerPrefs.GetFloat("BGM") : 10;
         temp_Setting[3] = PlayerPrefs.HasKey("SFX") ? PlayerPrefs.GetFloat("SFX") : 10;
+        fullScreen_Toggle.isOn = temp_Setting[0] == 1;
+        resolution_Dropdown.value = (int)temp_Setting[1];
         bgm_Input.text = temp_Setting[2].ToString();
         sfx_Input.text = temp_Setting[3].ToString();
         prevSFX = temp_Setting[3];
+    }
+
+    public void SetFullScreen()
+    {
+        isFullScreen = fullScreen_Toggle.isOn;
+        SetResolution(resolution_Dropdown.value);
     }
 
     public void SetResolution(int value)
@@ -147,9 +272,13 @@ public class UIManager : MonoBehaviour
     public void CancleButton()
     {
         setting_Interface.SetActive(false);
-        MainUI(true);
+        logo.gameObject.SetActive(true);
+        first_Button.gameObject.SetActive(true);
+        second_Button.gameObject.SetActive(true);
+        third_Button.gameObject.SetActive(true);
+
         isFullScreen = temp_Setting[0] == 1 ? true : false;
-        //SetResolution((int)temp_Setting[1]);
+        SetResolution((int)temp_Setting[1]);
         AudioManager.audioManager.ChangeBGMVolume(temp_Setting[2] / 10);
         AudioManager.audioManager.ChangeSFXVolume(temp_Setting[3] / 10);
     }
@@ -157,8 +286,13 @@ public class UIManager : MonoBehaviour
     public void ConfirmButton()
     {
         setting_Interface.SetActive(false);
-        MainUI(true);
+        logo.gameObject.SetActive(true);
+        first_Button.gameObject.SetActive(true);
+        second_Button.gameObject.SetActive(true);
+        third_Button.gameObject.SetActive(true);
+
         PlayerPrefs.SetInt("FullScreen", isFullScreen == true ? 1 : 0);
+        PlayerPrefs.SetFloat("Resolution", resolution_Dropdown.value);
         PlayerPrefs.SetFloat("BGM", float.Parse(bgm_Input.text));
         PlayerPrefs.SetFloat("SFX", float.Parse(sfx_Input.text));
     }
@@ -168,43 +302,68 @@ public class UIManager : MonoBehaviour
         Application.Quit();
     }
 
-    void MainUI(bool active)
+    bool CheckName()
     {
-        start_Button.gameObject.SetActive(active);
-        setting_Button.gameObject.SetActive(active);
-        exit_Button.gameObject.SetActive(active);
+        Text input = name_Input.placeholder.GetComponent<Text>();
+        string name = name_Input.text;
+
+        if (name == "")
+        {
+            input.fontSize = 24;
+            input.text = "Please enter your name!";
+            return false;
+        }
+        else if (name.Length < 2 ||  name.Length > 10)
+        {
+            name_Input.text = "";
+            input.fontSize = 20;
+            input.text = "Please specify the number of\ncharacters between 2 and 10!";
+            return false;
+        }
+
+        player_Name = name;
+        return true;
+    }
+
+    public void JoinServer()
+    {
+        if (!CheckName()) return;
+        GameManager.gameManager.isAIBattle = false;
+        Situation2();
+
+        // server
     }
 
     public void AIMode()
     {
+        if (!CheckName()) return;
         GameManager.gameManager.isAIBattle= true;
         GameStart();
     }
 
     public void BattleMode()
     {
+        if (!CheckName()) return;
         GameManager.gameManager.isAIBattle = false;
         GameStart();
     }
 
-    public void BackButton()
+    public void Disconnect()
     {
-        SubButton(false);
-        MainUI(true);
-    }
-
-    void SubButton(bool active)
-    {
-        battleMode_Button.gameObject.SetActive(active);
-        aiMode_Button.gameObject.SetActive(active);
-        back_Button.gameObject.SetActive(active);
+        Situation1();
     }
 
     public void GameStart()
     {
+        first_Button.gameObject.SetActive(false);
+        second_Button.gameObject.SetActive(false);
+        third_Button.gameObject.SetActive(false);
+        fourth_Button.gameObject.SetActive(false);
+        fifth_Button.gameObject.SetActive(false);
+        name_Text.gameObject.SetActive(false);
+        name_Input.gameObject.SetActive(false);
+
         GameManager.gameManager.InitField();
-        SubButton(false);
-        logo.gameObject.SetActive(false);
         playGround.SetActive(true);
         timeText.gameObject.SetActive(true);
         playerColor.gameObject.SetActive(true);
@@ -221,8 +380,32 @@ public class UIManager : MonoBehaviour
         AudioManager.audioManager.PlaySFX(AudioManager.SFX.Hammer);
     }
 
+    void WinnerBanner(int winner)
+    {
+        string winPlayer;
+
+        switch (winner)
+        {
+            case 0:
+                winPlayer = player_Name + " Win!";
+                break;
+            case 1:
+                if (GameManager.gameManager.isAIBattle)
+                    winPlayer = "AI Win!";
+                else winPlayer = "Player2 Win!";
+                break;
+            default:
+                winPlayer = "-Draw-";
+                break;
+        }
+
+        messageText.text = winPlayer;
+    }
+
     public void GameEnd(int winner)
     {
+        home_Button.gameObject.SetActive(true);
+        messageBanner.gameObject.SetActive(true);
         foreach (Button button in item_Buttons)
         {
             button.gameObject.SetActive(false);
@@ -231,28 +414,20 @@ public class UIManager : MonoBehaviour
         {
             enemyItem.gameObject.SetActive(false);
         }
-        playerColor.gameObject.SetActive(false);
 
-        home_Button.gameObject.SetActive(true);
-        messageBanner.gameObject.SetActive(true);
-        string winPlayer;
-        if (winner == 0) winPlayer = "Player1 Win!";
-        else if (winner == 1) winPlayer = "Player2 Win!";
-        else winPlayer = "-Draw-";
-        messageText.text = winPlayer;
+        WinnerBanner(winner);
         isPlaying = false;
     }
 
-    public void GoHome()
+    public void HomeButton()
     {
         GameManager.gameManager.ClearField();
         timeText.gameObject.SetActive(false);
         home_Button.gameObject.SetActive(false);
         playGround.SetActive(false);
         playerColor.gameObject.SetActive(false);
-        logo.gameObject.SetActive(true);
-        MainUI(true);
         messageBanner.gameObject.SetActive(false);
+        Situation0();
         AudioManager.audioManager.PlaySFX(AudioManager.SFX.Hammer);
         AudioManager.audioManager.PlayBGM(true);
     }

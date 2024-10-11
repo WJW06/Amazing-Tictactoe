@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using Unity.VisualScripting;
 using UnityEngine;
+using static UnityEditor.FilePathAttribute;
 
 public class GameManager : MonoBehaviour
 {
@@ -27,7 +28,6 @@ public class GameManager : MonoBehaviour
     int[] playerItemCount;
     public bool isUsingHandGun = false;
     bool isPlaying = false;
-    int clickIndex;
     WaitForSeconds startDelay = new WaitForSeconds(0.1f);
 
     void Awake()
@@ -64,11 +64,7 @@ public class GameManager : MonoBehaviour
         if (isPlaying)
         {
             ClickFeild();
-            //DecalField(); // PC
-        }
-        else
-        {
-            if (Input.GetButtonDown("Cancel")) Application.Quit();
+            DecalField();
         }
     }
 
@@ -150,87 +146,32 @@ public class GameManager : MonoBehaviour
                         CreateCircle(index);
                     }
                 }
-                else // Mobile
+                else
                 {
-                    if (hit.transform.tag == "Floor")
+                    if (hit.transform.tag == "Floor" || hit.transform.tag == "Circle")
                     {
-                        Floor floor = hit.transform.GetComponent<Floor>();
-                        index = floor.floorIndex;
-                    }
-                    else if (hit.transform.tag == "Circle")
-                    {
-                        Floor floor = hit.transform.GetComponentInParent<Floor>();
-                        index = floor.floorIndex;
-                    }
-                    else return;
-
-                    if (curDecalIndex != index && curDecalIndex != -1) ClearFieldDecal();
-                    curDecalIndex = index;
-
-                    if (turn % 2 == 0)
-                    {
-                        switch (player1_Items[curItemIndex].itemType)
+                        if (hit.transform.tag == "Floor")
                         {
-                            case Item.Type.Hammer:
-                                HammerDecal(index);
-                                break;
-                            case Item.Type.HandGun:
-                                HandGunDecal();
-                                break;
-                            case Item.Type.Shotgun:
-                                ShotgunDecal(index);
-                                break;
-                            case Item.Type.WildCard:
-                                WildCardDecal(index);
-                                break;
+                            Floor floor = hit.transform.GetComponent<Floor>();
+                            index = floor.floorIndex;
                         }
-                    }
-                    else
-                    {
-                        switch (player2_Items[curItemIndex].itemType)
+                        else if (hit.transform.tag == "Circle")
                         {
-                            case Item.Type.Hammer:
-                                HammerDecal(index);
-                                break;
-                            case Item.Type.HandGun:
-                                HandGunDecal();
-                                break;
-                            case Item.Type.Shotgun:
-                                ShotgunDecal(index);
-                                break;
-                            case Item.Type.WildCard:
-                                WildCardDecal(index);
-                                break;
+                            Floor floor = hit.transform.GetComponentInParent<Floor>();
+                            index = floor.floorIndex;
                         }
+
+                        if (curPlayer == 0) player1_Items[curItemIndex].OnAblity(index);
+                        else if (curPlayer == 1) player2_Items[curItemIndex].OnAblity(index);
+
+                        UseItem(curItemIndex);
+                        UsedItem(turn % 2, curItemIndex);
+                        if (isPlaying) ChangeTurn(turn % 2);
                     }
-                    UIManager.uiManager.confirm_Button.gameObject.SetActive(true);
                 }
             }
-            //else // PC
-            //{
-            //if (hit.transform.tag == "Floor" || hit.transform.tag == "Circle")
-            //{
-            //    if (hit.transform.tag == "Floor")
-            //    {
-            //        Floor floor = hit.transform.GetComponent<Floor>();
-            //        index = floor.floorIndex;
-            //    }
-            //    else if (hit.transform.tag == "Circle")
-            //    {
-            //        Floor floor = hit.transform.GetComponentInParent<Floor>();
-            //        index = floor.floorIndex;
-            //    }
-
-            //    if (curPlayer == 0) player1_Items[curItemIndex].OnAblity(index);
-            //    else if (curPlayer == 1) player2_Items[curItemIndex].OnAblity(index);
-
-            //    UseItem(curItemIndex);
-            //    UsedItem(turn % 2, curItemIndex);
-            //    if (isPlaying) ChangeTurn(turn % 2);
-            //    }
-            //}
+        }
     }
-}
 
     public void ChangeTurn(int curPlayer)
     {
@@ -341,12 +282,10 @@ public class GameManager : MonoBehaviour
         {
             isUsingItem = !isUsingItem;
             UIManager.uiManager.UsingItem(curItemIndex, isUsingItem);
-            UIManager.uiManager.confirm_Button.gameObject.SetActive(false);
         }
         isUsingItem = !isUsingItem;
         curItemIndex = index;
         UIManager.uiManager.UsingItem(index, isUsingItem);
-        if (!isUsingItem) UIManager.uiManager.confirm_Button.gameObject.SetActive(isUsingItem);
         AudioManager.audioManager.PlaySFX(AudioManager.SFX.Item);
         ClearFieldDecal();
     }
@@ -365,18 +304,6 @@ public class GameManager : MonoBehaviour
             --playerItemCount[1];
         }
         UIManager.uiManager.UsedItem(index);
-    }
-
-    public void ConfirmUseItem()
-    {
-        if (turn % 2 == 0) player1_Items[curItemIndex].OnAblity(curDecalIndex);
-        else if (turn % 2 == 1) player2_Items[curItemIndex].OnAblity(curDecalIndex);
-
-        UseItem(curItemIndex);
-        UsedItem(turn % 2, curItemIndex);
-        if (isPlaying) ChangeTurn(turn % 2);
-
-        UIManager.uiManager.confirm_Button.gameObject.SetActive(false);
     }
 
     public void DestroyCircle(int index)
@@ -411,7 +338,6 @@ public class GameManager : MonoBehaviour
     void DecalField()
     {
         if (!isUsingItem) return;
-
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit))
