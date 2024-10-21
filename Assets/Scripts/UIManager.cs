@@ -2,7 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.TextCore.Text;
 using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
@@ -31,6 +33,21 @@ public class UIManager : MonoBehaviour
     public Text name_Text;
     public InputField name_Input;
     string player_Name;
+
+    public Image network_Status;
+    public bool isConnect = false;
+
+    public Image room_Status;
+    public Text title_Text;
+    public Text error_Text;
+    public Button enter_Button;
+    public InputField room_Input;
+    bool isCreateRoom;
+
+    public Image room_Base;
+    public Text room_Name;
+    public Text player1_name;
+    public Text player2_name;
 
     public Button[] item_Buttons;
     public Image[] enemyItems;
@@ -124,7 +141,7 @@ public class UIManager : MonoBehaviour
                 AIMode();
                 break;
             case 2:
-                // Join Room
+                JoinRoom();
                 break;
         }
     }
@@ -166,22 +183,27 @@ public class UIManager : MonoBehaviour
                 JoinServer();
                 break;
             case 2:
-                // Create Room
+                CreateRoom();
                 break;
         }
     }
 
     public void FifthButton()
     {
-        // Random Match
+        RandomMatch();
+    }
+
+    void MainButtons(bool b)
+    {
+        first_Button.gameObject.SetActive(b);
+        second_Button.gameObject.SetActive(b);
+        third_Button.gameObject.SetActive(b);
     }
 
     public void SettingButton()
     {
         logo.gameObject.SetActive(false);
-        first_Button.gameObject.SetActive(false);
-        second_Button.gameObject.SetActive(false);
-        third_Button.gameObject.SetActive(false);
+        MainButtons(true);
 
         setting_Interface.SetActive(true);
         temp_Setting[0] = PlayerPrefs.HasKey("FullScreen") ? PlayerPrefs.GetInt("FullScreen") : 1;
@@ -273,9 +295,7 @@ public class UIManager : MonoBehaviour
     {
         setting_Interface.SetActive(false);
         logo.gameObject.SetActive(true);
-        first_Button.gameObject.SetActive(true);
-        second_Button.gameObject.SetActive(true);
-        third_Button.gameObject.SetActive(true);
+        MainButtons(true);
 
         isFullScreen = temp_Setting[0] == 1 ? true : false;
         SetResolution((int)temp_Setting[1]);
@@ -287,9 +307,7 @@ public class UIManager : MonoBehaviour
     {
         setting_Interface.SetActive(false);
         logo.gameObject.SetActive(true);
-        first_Button.gameObject.SetActive(true);
-        second_Button.gameObject.SetActive(true);
-        third_Button.gameObject.SetActive(true);
+        MainButtons(true);
 
         PlayerPrefs.SetInt("FullScreen", isFullScreen == true ? 1 : 0);
         PlayerPrefs.SetFloat("Resolution", resolution_Dropdown.value);
@@ -329,9 +347,11 @@ public class UIManager : MonoBehaviour
     {
         if (!CheckName()) return;
         GameManager.gameManager.isAIBattle = false;
+        network_Status.gameObject.SetActive(true);
+        NetworkManager.networkManager.Connect();
+        NetworkManager.networkManager.JoinServer();
         Situation2();
-
-        // server
+        ActiveButtons(false);
     }
 
     public void AIMode()
@@ -348,18 +368,119 @@ public class UIManager : MonoBehaviour
         GameStart();
     }
 
+    public void CloseStatus()
+    {
+        if (!isConnect) return;
+        print("Close");
+        network_Status.gameObject.SetActive(false);
+    }
+
+    public void RandomMatch()
+    {
+
+    }
+
+    public void ActiveButtons(bool b)
+    {
+        first_Button.gameObject.SetActive(b);
+        second_Button.gameObject.SetActive(b);
+        fourth_Button.gameObject.SetActive(b);
+        fifth_Button.gameObject.SetActive(b);
+    }
+
+    public void JoinRoom()
+    {
+        ActiveButtons(false);
+        title_Text.text = "Join Room";
+        room_Input.text = "";
+        error_Text.gameObject.SetActive(false);
+        enter_Button.GetComponentInChildren<Text>().text = "Join";
+        room_Status.gameObject.SetActive(true);
+        isCreateRoom = false;
+    }
+
+    public void CreateRoom()
+    {
+        ActiveButtons(false);
+        title_Text.text = "Create Room";
+        room_Input.text = "";
+        error_Text.gameObject.SetActive(false);
+        enter_Button.GetComponentInChildren<Text>().text = "Create";
+        room_Status.gameObject.SetActive(true);
+        isCreateRoom = true;
+    }
+
+    public void CloseRoom(bool isCancle)
+    {
+        room_Status.gameObject.SetActive(false);
+        if (isCancle) ActiveButtons(true);
+    }
+
+    public void EnterButton()
+    {
+        if (room_Input.text == "")
+        {
+            error_Text.gameObject.SetActive(true);
+            error_Text.text = "<color=red>Error: The value is empty.</color>";
+            return;
+        }
+        else if (room_Input.text.Length > 20)
+        {
+            error_Text.gameObject.SetActive(true);
+            error_Text.text = "<color=red>The name is too long. (20 characters or less)</color>";
+            return;
+        }
+
+        network_Status.gameObject.SetActive(true);
+        if (isCreateRoom) NetworkManager.networkManager.CreateRoom();
+        else NetworkManager.networkManager.JoinRoom();
+    }
+
+    public void CreateRoomFailed()
+    {
+        error_Text.gameObject.SetActive(true);
+        error_Text.text = "<color=red>The name already exists.</color>";
+    }
+
+    public void JoinRoomFailed()
+    {
+        error_Text.gameObject.SetActive(true);
+        error_Text.text = "<color=red>The name does not exist.</color>";
+    }
+    public void ShowRoom(string p1_name, string p2_name)
+    {
+        room_Base.gameObject.SetActive(true);
+        room_Name.text = room_Input.text;
+        player1_name.text = p1_name;
+        player2_name.text = p2_name;
+        room_Status.gameObject.SetActive(false);
+    }
+
+    public void LeaveButton()
+    {
+        room_Base.gameObject.SetActive(false);
+        Situation2();
+        NetworkManager.networkManager.LeaveRoom();
+    }
+
+    public void StartButton()
+    {
+        
+    }
+
     public void Disconnect()
     {
+        if (!isConnect) return;
+        network_Status.gameObject.SetActive(true);
+        NetworkManager.networkManager.Disconnect();
         Situation1();
     }
 
     public void GameStart()
     {
-        first_Button.gameObject.SetActive(false);
-        second_Button.gameObject.SetActive(false);
+        CloseRoom(false);
+        ActiveButtons(false);
         third_Button.gameObject.SetActive(false);
-        fourth_Button.gameObject.SetActive(false);
-        fifth_Button.gameObject.SetActive(false);
         name_Text.gameObject.SetActive(false);
         name_Input.gameObject.SetActive(false);
 
