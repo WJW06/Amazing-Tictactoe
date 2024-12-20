@@ -14,8 +14,18 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public InputField room_Input;
 
     void Awake() => networkManager = this;
-    
-    void Update() => status_Text.text = PhotonNetwork.NetworkClientState.ToString();
+
+    void Update()
+    {
+        status_Text.text = PhotonNetwork.NetworkClientState.ToString();
+        if (GameManager.gameManager.GetPlaying() && GameManager.gameManager.GetOnline())
+        {
+            if (PhotonNetwork.PlayerList.Length == 1)
+            {
+                UIManager.uiManager.GameEnd(PhotonNetwork.LocalPlayer.NickName + " Win!");
+            }
+        }
+    }
 
     public void Connect() => PhotonNetwork.ConnectUsingSettings();
 
@@ -51,7 +61,12 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     public void RandomMatch() => PhotonNetwork.JoinRandomRoom();
 
-    public void LeaveRoom() => PhotonNetwork.LeaveRoom();
+    public void LeaveRoom()
+    {
+        print("Leave Room");
+        PhotonNetwork.LeaveRoom();
+        RoomRenewal();
+    }
 
     public override void OnCreatedRoom()
     {
@@ -65,7 +80,10 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         print("Join Room");
         UIManager.uiManager.CloseStatus();
         UIManager.uiManager.CloseRoom(false);
-        UIManager.uiManager.ShowRoom(PhotonNetwork.PlayerList[0].NickName, PhotonNetwork.PlayerList.Length > 1 ? PhotonNetwork.PlayerList[1].NickName : "");
+        RoomRenewal();
+        UIManager.uiManager.ShowRoom(PhotonNetwork.CurrentRoom.Name,
+            PhotonNetwork.PlayerList[0].NickName,
+            PhotonNetwork.PlayerList.Length > 1 ? PhotonNetwork.PlayerList[1].NickName : "");
     }
 
     public override void OnCreateRoomFailed(short returnCode, string message)
@@ -86,5 +104,33 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         print("Failed Random Match");
         UIManager.uiManager.CloseStatus();
+    }
+
+    public override void OnPlayerEnteredRoom(Player newPlayer)
+    {
+        RoomRenewal();
+    }
+
+    public override void OnPlayerLeftRoom(Player otherPlayer)
+    {
+        RoomRenewal();
+    }
+
+    void RoomRenewal()
+    {
+        string p1 = PhotonNetwork.PlayerList[0].NickName;
+        string p2 = "";
+        bool isP2 = false;
+        if (PhotonNetwork.PlayerList.Length == 2)
+        {
+            p2 = PhotonNetwork.PlayerList[1].NickName;
+            isP2 = true;
+        }
+        UIManager.uiManager.RoomRenewal(p1, p2, isP2);
+    }
+
+    public string GetWinnerName(int winner)
+    {
+        return PhotonNetwork.PlayerList[winner].NickName;
     }
 }

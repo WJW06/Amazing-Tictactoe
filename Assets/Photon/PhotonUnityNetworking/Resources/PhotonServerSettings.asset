@@ -28,7 +28,7 @@ MonoBehaviour:
     AuthMode: 0
     EnableLobbyStatistics: 0
     NetworkLogging: 1
-  DevRegion: 
+  DevRegion: hk
   PunLogging: 0
   EnableSupportLogger: 0
   RunInBackground: 1
@@ -39,6 +39,28 @@ MonoBehaviour:
   - DestroySpaceship
   - Fire
   - RespawnSpaceship
+  - GameStart
+  - IsP2
+  - InterFeild
+  - OnlineMode
+  - FourthButton
+  - Whyyyyyyyyyy
+  - GameEnd
+  - ChangeTurn
+  - CreateCircle
+  - UsedItem
+  - UseItem
+  - OnlineGameEnd
+  - OnlineModeEnd
+  - MatchItem
+  - OnlineCreateItems
+  - FillDecalFieled
+  - OnAbility
+  - ClearFieldDecal
+  - HandGun
+  - HandGunCoroutine
+  - ShotGun
+  - UseItemSub
   DisableAutoOpenWizard: 1
   ShowSettings: 1
-  DevRegionSetOnce: 0
+  DevRegionSetOnce: 1

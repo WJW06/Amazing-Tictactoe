@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEditor.FilePathAttribute;
+//using static UnityEditor.FilePathAttribute;
 
 public class BattleAI : MonoBehaviour
 {
@@ -246,7 +246,7 @@ public class BattleAI : MonoBehaviour
 
     void UseItem(int type)
     {
-        gameManager.player2_Items[type].OnAblity(item_Index);
+        gameManager.player2_Items[type].OnAbility(item_Index);
 
         gameManager.UseItem(type);
         gameManager.UsedItem(1, type);

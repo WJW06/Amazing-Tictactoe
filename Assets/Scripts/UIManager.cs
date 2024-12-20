@@ -1,3 +1,5 @@
+using Photon.Pun;
+using Photon.Realtime;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,6 +12,7 @@ using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
     public static UIManager uiManager;
+    public PhotonView PV;
 
     public GameObject playGround;
 
@@ -43,11 +46,13 @@ public class UIManager : MonoBehaviour
     public Button enter_Button;
     public InputField room_Input;
     bool isCreateRoom;
+    bool isMaster;
 
     public Image room_Base;
     public Text room_Name;
     public Text player1_name;
     public Text player2_name;
+    public Button start_Button;
 
     public Button[] item_Buttons;
     public Image[] enemyItems;
@@ -64,11 +69,16 @@ public class UIManager : MonoBehaviour
     float prevSFX;
     bool isPlaying;
     bool isFullScreen = true;
+    WaitForSeconds startDelay = new WaitForSeconds(0.2f);
+
 
     void Awake()
     {
         uiManager = this;
         temp_Setting = new float[4];
+        int isFull = PlayerPrefs.HasKey("FullScreen") ? PlayerPrefs.GetInt("FullScreen") : 1;
+        isFullScreen = isFull == 0 ? false : true;
+        resolution_Dropdown.onValueChanged.AddListener(SetResolution);
         SetResolution((int)PlayerPrefs.GetFloat("Resolution"));
     }
 
@@ -81,6 +91,11 @@ public class UIManager : MonoBehaviour
             int sec = Mathf.FloorToInt(time % 60);
             timeText.text = string.Format("Time: {0:D2}:{1:D2}", min, sec);
         }
+    }
+
+    public string GetPlayerName()
+    {
+        return player_Name;
     }
 
     void Situation0()
@@ -144,6 +159,7 @@ public class UIManager : MonoBehaviour
                 JoinRoom();
                 break;
         }
+        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Button);
     }
 
     public void SecondButton()
@@ -160,6 +176,7 @@ public class UIManager : MonoBehaviour
                 Disconnect();
                 break;
         }
+        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Button);
     }
 
     public void ThirdButton()
@@ -173,6 +190,7 @@ public class UIManager : MonoBehaviour
                 Situation0();
                 break;
         }
+        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Button);
     }
 
     public void FourthButton()
@@ -186,11 +204,13 @@ public class UIManager : MonoBehaviour
                 CreateRoom();
                 break;
         }
+        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Button);
     }
 
     public void FifthButton()
     {
         RandomMatch();
+        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Button);
     }
 
     void MainButtons(bool b)
@@ -246,16 +266,16 @@ public class UIManager : MonoBehaviour
                 Screen.SetResolution(1280, 1024, isFullScreen);
                 break;
             case 6:
-                Screen.SetResolution(1280, 720, isFullScreen);
+                Screen.SetResolution(1280, 768, isFullScreen);
                 break;
             case 7:
-                Screen.SetResolution(1024, 768, isFullScreen);
+                Screen.SetResolution(1280, 720, isFullScreen);
                 break;
             case 8:
-                Screen.SetResolution(800, 600, isFullScreen);
+                Screen.SetResolution(1024, 768, isFullScreen);
                 break;
             case 9:
-                Screen.SetResolution(640, 480, isFullScreen);
+                Screen.SetResolution(800, 600, isFullScreen);
                 break;
         }
     }
@@ -301,6 +321,7 @@ public class UIManager : MonoBehaviour
         SetResolution((int)temp_Setting[1]);
         AudioManager.audioManager.ChangeBGMVolume(temp_Setting[2] / 10);
         AudioManager.audioManager.ChangeSFXVolume(temp_Setting[3] / 10);
+        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Button);
     }
 
     public void ConfirmButton()
@@ -313,10 +334,12 @@ public class UIManager : MonoBehaviour
         PlayerPrefs.SetFloat("Resolution", resolution_Dropdown.value);
         PlayerPrefs.SetFloat("BGM", float.Parse(bgm_Input.text));
         PlayerPrefs.SetFloat("SFX", float.Parse(sfx_Input.text));
+        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Button);
     }
 
     public void ExitButton()
     {
+        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Button);
         Application.Quit();
     }
 
@@ -352,6 +375,7 @@ public class UIManager : MonoBehaviour
         NetworkManager.networkManager.JoinServer();
         Situation2();
         ActiveButtons(false);
+        isMaster = false;
     }
 
     public void AIMode()
@@ -370,14 +394,14 @@ public class UIManager : MonoBehaviour
 
     public void CloseStatus()
     {
-        if (!isConnect) return;
-        print("Close");
+        if (!isConnect || !network_Status) return;
         network_Status.gameObject.SetActive(false);
     }
 
     public void RandomMatch()
     {
-
+        network_Status.gameObject.SetActive(true);
+        NetworkManager.networkManager.RandomMatch();
     }
 
     public void ActiveButtons(bool b)
@@ -434,6 +458,7 @@ public class UIManager : MonoBehaviour
         network_Status.gameObject.SetActive(true);
         if (isCreateRoom) NetworkManager.networkManager.CreateRoom();
         else NetworkManager.networkManager.JoinRoom();
+        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Button);
     }
 
     public void CreateRoomFailed()
@@ -447,13 +472,29 @@ public class UIManager : MonoBehaviour
         error_Text.gameObject.SetActive(true);
         error_Text.text = "<color=red>The name does not exist.</color>";
     }
-    public void ShowRoom(string p1_name, string p2_name)
+    public void ShowRoom(string room_name, string p1_name, string p2_name)
     {
+        room_Status.gameObject.SetActive(false);
         room_Base.gameObject.SetActive(true);
-        room_Name.text = room_Input.text;
+        room_Name.text = room_name;
         player1_name.text = p1_name;
         player2_name.text = p2_name;
-        room_Status.gameObject.SetActive(false);
+    }
+
+    public void RoomRenewal(string p1, string p2, bool isP2)
+    {
+        player1_name.text = p1;
+        player2_name.text = p2;
+        if (isP2)
+        {
+            if (isMaster) return;
+            else start_Button.gameObject.SetActive(false);
+        }
+        else
+        {
+            isMaster = true;
+            start_Button.gameObject.SetActive(true);
+        }
     }
 
     public void LeaveButton()
@@ -461,11 +502,16 @@ public class UIManager : MonoBehaviour
         room_Base.gameObject.SetActive(false);
         Situation2();
         NetworkManager.networkManager.LeaveRoom();
+        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Button);
     }
 
     public void StartButton()
     {
-        
+        if (player2_name.text == "") return;
+        PV.RPC("OnlineMode", RpcTarget.All);
+        PV.RPC("IsP2", RpcTarget.All);
+        PV.RPC("GameStart", RpcTarget.All);
+        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Button);
     }
 
     public void Disconnect()
@@ -476,10 +522,25 @@ public class UIManager : MonoBehaviour
         Situation1();
     }
 
+    [PunRPC]
+    public void OnlineMode()
+    {
+        GameManager.gameManager.SetOnline(true);
+    }
+
+    [PunRPC]
+    public void IsP2()
+    {
+        if (!isMaster) GameManager.gameManager.SetP2(true);
+        else GameManager.gameManager.SetP2(false);
+    }
+
+    [PunRPC]
     public void GameStart()
     {
         CloseRoom(false);
         ActiveButtons(false);
+        room_Base.gameObject.SetActive(false);
         third_Button.gameObject.SetActive(false);
         name_Text.gameObject.SetActive(false);
         name_Input.gameObject.SetActive(false);
@@ -488,6 +549,13 @@ public class UIManager : MonoBehaviour
         playGround.SetActive(true);
         timeText.gameObject.SetActive(true);
         playerColor.gameObject.SetActive(true);
+        time = 0;
+        isPlaying = true;
+        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Hammer);
+    }
+
+    public void ShowItems(int curPlayer)
+    {
         for (int i = 0; i < 3; ++i)
         {
             SetItemImage(0, i);
@@ -495,35 +563,16 @@ public class UIManager : MonoBehaviour
             item_Buttons[i].gameObject.SetActive(true);
             enemyItems[i].gameObject.SetActive(true);
         }
-        ChangeUI(1);
-        time = 0;
-        isPlaying = true;
-        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Hammer);
+        
+        ChangeUI(curPlayer);
     }
 
-    void WinnerBanner(int winner)
+    public void WinnerBanner(string winner)
     {
-        string winPlayer;
-
-        switch (winner)
-        {
-            case 0:
-                winPlayer = player_Name + " Win!";
-                break;
-            case 1:
-                if (GameManager.gameManager.isAIBattle)
-                    winPlayer = "AI Win!";
-                else winPlayer = "Player2 Win!";
-                break;
-            default:
-                winPlayer = "-Draw-";
-                break;
-        }
-
-        messageText.text = winPlayer;
+        messageText.text = winner;
     }
 
-    public void GameEnd(int winner)
+    public void GameEnd(string winner)
     {
         home_Button.gameObject.SetActive(true);
         messageBanner.gameObject.SetActive(true);
@@ -538,10 +587,17 @@ public class UIManager : MonoBehaviour
 
         WinnerBanner(winner);
         isPlaying = false;
+        GameManager.gameManager.SetPlaying(isPlaying);
+        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Win);
+        AudioManager.audioManager.PlayBGM(false);
     }
 
     public void HomeButton()
     {
+        if (GameManager.gameManager.GetOnline())
+        {
+            NetworkManager.networkManager.OnDisconnected(DisconnectCause.SendException);
+        }
         GameManager.gameManager.ClearField();
         timeText.gameObject.SetActive(false);
         home_Button.gameObject.SetActive(false);
@@ -551,6 +607,12 @@ public class UIManager : MonoBehaviour
         Situation0();
         AudioManager.audioManager.PlaySFX(AudioManager.SFX.Hammer);
         AudioManager.audioManager.PlayBGM(true);
+        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Button);
+        if (GameManager.gameManager.GetOnline())
+        {
+            GameManager.gameManager.SetOnline(false);
+            PhotonNetwork.Disconnect();
+        }
     }
 
     public void SetItemImage(int curPlayer, int index)
@@ -561,6 +623,7 @@ public class UIManager : MonoBehaviour
 
         if (curPlayer == 0) buttonImg = item_Buttons[index].GetComponentsInChildren<Image>()[1];
         else buttonImg = enemyItems[index].GetComponentsInChildren<Image>()[1];
+
         buttonImg.sprite = itemSprite[itemType];
     }
 
@@ -600,13 +663,27 @@ public class UIManager : MonoBehaviour
 
     public void UsingItem(int index, bool isUsing)
     {
-        if (isUsing)
+        if (GameManager.gameManager.GetOnline())
         {
-            item_Buttons[index].image.color = Color.yellow;
+            if (isUsing)
+            {
+                item_Buttons[index].image.color = Color.yellow;
+            }
+            else
+            {
+                item_Buttons[index].image.color = Color.white;
+            }
         }
         else
         {
-            item_Buttons[index].image.color = Color.white;
+            if (isUsing)
+            {
+                item_Buttons[index].image.color = Color.yellow;
+            }
+            else
+            {
+                item_Buttons[index].image.color = Color.white;
+            }
         }
     }
 

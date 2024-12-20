@@ -21,6 +21,7 @@ public class AudioManager : MonoBehaviour
 
     public enum SFX
     {
+        Button,
         Player1,
         Player2,
         Item,

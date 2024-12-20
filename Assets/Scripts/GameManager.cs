@@ -1,14 +1,16 @@
+using Photon.Pun;
+using Photon.Realtime;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using Unity.VisualScripting;
 using UnityEngine;
-using static UnityEditor.FilePathAttribute;
 
-public class GameManager : MonoBehaviour
+public class GameManager : MonoBehaviour, IPunObservable
 {
     public static GameManager gameManager;
+    public PhotonView PV;
 
     public bool isAIBattle;
     public int turn = 0;
@@ -28,6 +30,9 @@ public class GameManager : MonoBehaviour
     int[] playerItemCount;
     public bool isUsingHandGun = false;
     bool isPlaying = false;
+    bool isOnline = false;
+    bool isP2 = false;
+    bool isSecondCreate = false;
     WaitForSeconds startDelay = new WaitForSeconds(0.1f);
 
     void Awake()
@@ -76,14 +81,60 @@ public class GameManager : MonoBehaviour
             player1_Arr[i] = 0;
             player2_Arr[i] = 0;
         }
+
         playersCount[0] = 0;
         playersCount[1] = 0;
-        CreateItems(0);
-        CreateItems(1);
+        isSecondCreate = false;
+
+        if (isOnline)
+        {
+            print("OnlineItem");
+            OnlineItems(0);
+            OnlineItems(1);
+        }
+        else
+        {
+            print("OfflineItem");
+            CreateItems(0);
+            CreateItems(1);
+        }
+
         turn = 0;
         isUsedItem = false;
-        StartCoroutine(StartDelay());
+
+        StartCoroutine("StartDelay");
     }
+
+    public bool GetPlaying()
+    {
+        return isPlaying;
+    }
+
+    public void SetPlaying(bool playing)
+    {
+        isPlaying = playing;
+    }
+
+    public void SetOnline(bool online)
+    {
+        isOnline = online;
+    }
+
+    public bool GetOnline()
+    {
+        return isOnline;
+    }
+
+    public void SetP2(bool p2)
+    {
+        isP2 = p2;
+    }
+
+    public bool GetP2()
+    {
+        return isP2;
+    }
+
 
     public void ClearField()
     {
@@ -93,6 +144,77 @@ public class GameManager : MonoBehaviour
         }
     }
 
+
+    void AIThink()
+    {
+        BattleAI.battleAI.Think();
+        CancelInvoke("AIThink");
+    }
+
+    void ClickFeild()
+    {
+        if (isUsingHandGun) return;
+        if (isAIBattle && turn % 2 == 1)
+        {
+            Invoke("AIThink", 0.5f);
+            return;
+        }
+        if (isOnline && ((!isP2 && turn % 2 == 1) || (isP2 && turn % 2 == 0))) return;
+        if (Input.GetMouseButtonDown(0))
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+            if (Physics.Raycast(ray, out hit))
+            {
+                int curPlayer = turn % 2;
+                int index = -1;
+                if (!isUsingItem) // 아이템 사용 안할때
+                {
+                    if (hit.transform.tag == "Floor")
+                    {
+                        Floor floor = hit.transform.GetComponent<Floor>();
+                        index = floor.floorIndex;
+                        if (isOnline) PV.RPC("CreateCircle", RpcTarget.All, index);
+                        else CreateCircle(index);
+                    }
+                }
+                else // 아이템 사용 할때
+                {
+                    if (hit.transform.tag == "Floor" || hit.transform.tag == "Circle")
+                    {
+                        if (hit.transform.tag == "Floor")
+                        {
+                            Floor floor = hit.transform.GetComponent<Floor>();
+                            index = floor.floorIndex;
+                        }
+                        else if (hit.transform.tag == "Circle")
+                        {
+                            Floor floor = hit.transform.GetComponentInParent<Floor>();
+                            index = floor.floorIndex;
+                        }
+
+                        if (isOnline) PV.RPC("OnAbility", RpcTarget.All, curPlayer, index);
+                        else OnAbility(curPlayer, index);
+
+                        UseItem(curItemIndex);
+                        
+                        if (isOnline)
+                        {
+                            PV.RPC("UsedItem", RpcTarget.All, curPlayer, curItemIndex);
+                            if (isPlaying) PV.RPC("ChangeTurn", RpcTarget.All, curPlayer);
+                        }
+                        else
+                        {
+                            UsedItem(curPlayer, curItemIndex);
+                            if (isPlaying) ChangeTurn(curPlayer);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    [PunRPC]
     public void CreateCircle(int index)
     {
         int curPlayer = turn % 2;
@@ -115,87 +237,48 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void AIThink()
-    {
-        BattleAI.battleAI.Think();
-        CancelInvoke("AIThink");
-    }
-
-    void ClickFeild()
-    {
-        if (isUsingHandGun) return;
-        if (isAIBattle && turn % 2 == 1)
-        {
-            Invoke("AIThink", 0.5f);
-            return;
-        }
-        if (Input.GetMouseButtonDown(0))
-        {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-            if (Physics.Raycast(ray, out hit))
-            {
-                int curPlayer = turn % 2;
-                int index = -1;
-                if (!isUsingItem)
-                {
-                    if (hit.transform.tag == "Floor")
-                    {
-                        Floor floor = hit.transform.GetComponent<Floor>();
-                        index = floor.floorIndex;
-                        CreateCircle(index);
-                    }
-                }
-                else
-                {
-                    if (hit.transform.tag == "Floor" || hit.transform.tag == "Circle")
-                    {
-                        if (hit.transform.tag == "Floor")
-                        {
-                            Floor floor = hit.transform.GetComponent<Floor>();
-                            index = floor.floorIndex;
-                        }
-                        else if (hit.transform.tag == "Circle")
-                        {
-                            Floor floor = hit.transform.GetComponentInParent<Floor>();
-                            index = floor.floorIndex;
-                        }
-
-                        if (curPlayer == 0) player1_Items[curItemIndex].OnAblity(index);
-                        else if (curPlayer == 1) player2_Items[curItemIndex].OnAblity(index);
-
-                        UseItem(curItemIndex);
-                        UsedItem(turn % 2, curItemIndex);
-                        if (isPlaying) ChangeTurn(turn % 2);
-                    }
-                }
-            }
-        }
-    }
-
+    [PunRPC]
     public void ChangeTurn(int curPlayer)
     {
         isUsedItem = false;
         UIManager.uiManager.ChangeUI(curPlayer);
+
         if (curPlayer == 0 && playerItemCount[0] == 0)
         {
-            if (itemsCount[0] == 0) CreateItems(0);
-            else --itemsCount[0];
+            if (isOnline)
+            {
+                if (itemsCount[0] == 0) OnlineItems(0);
+                else --itemsCount[0];
+            }
+            else
+            {
+                if (itemsCount[0] == 0) CreateItems(0);
+                else --itemsCount[0];
+            }
         }
         else if (curPlayer == 1 && playerItemCount[1] == 0)
         {
-            if (itemsCount[1] == 0) CreateItems(1);
-            else --itemsCount[1];
+            if (isOnline)
+            {
+                if (itemsCount[1] == 0) OnlineItems(1);
+                else --itemsCount[1];
+            }
+            else
+            {
+                if (itemsCount[1] == 0) CreateItems(1);
+                else --itemsCount[1];
+            }
         }
 
         if (playersCount[0] + playersCount[1] >= 36)
         {
             Debug.Log("무승부");
             isPlaying = false;
-            UIManager.uiManager.GameEnd(2);
+            UIManager.uiManager.GameEnd("-Draw-");
             AudioManager.audioManager.PlaySFX(AudioManager.SFX.Win);
             AudioManager.audioManager.PlayBGM(false);
         }
+
         ++turn;
     }
 
@@ -220,16 +303,37 @@ public class GameManager : MonoBehaviour
         if (victory)
         {
             Debug.Log("플레이어" + curPlayer + " 승!");
-            isPlaying = false;
-            UIManager.uiManager.GameEnd(curPlayer);
-            AudioManager.audioManager.PlaySFX(AudioManager.SFX.Win);
-            AudioManager.audioManager.PlayBGM(false);
+            if (isOnline)
+            {
+                string winner = NetworkManager.networkManager.GetWinnerName(curPlayer);
+                UIManager.uiManager.GameEnd(winner);
+            }
+            else
+            {
+                if (curPlayer == 0) UIManager.uiManager.GameEnd(UIManager.uiManager.GetPlayerName() + " Win!");
+                else UIManager.uiManager.GameEnd("Player2 Win!");
+            }
         }
     }
 
-    public void CreateItems(int player)
+    void OnlineItems(int player)
+    {
+        if (isP2) return;
+
+        int[] ranTypes = new int[3];
+        for (int i = 0; i < 3; ++i)
+        {
+            int type = RandomItemType(UnityEngine.Random.Range(0, 10));
+            ranTypes[i] = type;
+        }
+        PV.RPC("OnlineCreateItems", RpcTarget.All, ranTypes, player);
+    }
+
+    [PunRPC]
+    public void OnlineCreateItems(int[] ranTypes, int player)
     {
         Item[] items;
+
         if (player == 0)
         {
             items = player1_Items;
@@ -239,45 +343,100 @@ public class GameManager : MonoBehaviour
         else
         {
             items = player2_Items;
-            playerItemCount[1] = 3;   
+            playerItemCount[1] = 3;
             itemsCount[1] = 2;
         }
 
         for (int i = 0; i < 3; ++i)
         {
-            int ranType = UnityEngine.Random.Range(0, 10);
-            switch (ranType)
-            {
-                case 0:
-                case 1:
-                    ranType = 0; // Hammer
-                    break;
-                case 2:
-                case 3:
-                case 4:
-                    ranType = 1; // HandGun
-                    break;
-                case 5:
-                case 6:
-                case 7:
-                    ranType = 2; // ShotGun
-                    break;
-                case 8:
-                case 9:
-                    ranType = 3; // WildCard
-                    break;
-            }
+            items[i].itemType = (Item.Type)ranTypes[i];
+            items[i].isUsed = false;
+        }
+
+        if (isSecondCreate) UIManager.uiManager.ShowItems(player);
+        else if (player == 1)
+        {
+            UIManager.uiManager.ShowItems(player);
+            isSecondCreate = true;
+        }
+    }
+
+    public void CreateItems(int player)
+    {
+        Item[] items;
+
+        if (player == 0)
+        {
+            items = player1_Items;
+            playerItemCount[0] = 3;
+            itemsCount[0] = 2;
+        }
+        else
+        {
+            items = player2_Items;
+            playerItemCount[1] = 3;
+            itemsCount[1] = 2;
+        }
+
+        for (int i = 0; i < 3; ++i)
+        {
+            int ranType = RandomItemType(UnityEngine.Random.Range(0, 10));
+
             items[i].itemType = (Item.Type)ranType;
             items[i].isUsed = false;
         }
+
+
+        if (isSecondCreate) UIManager.uiManager.ShowItems(player);
+        else if (player == 1)
+        {
+            UIManager.uiManager.ShowItems(player);
+            isSecondCreate = true;
+        }
+    }
+
+    int RandomItemType(int type)
+    {
+        int ranType = type;
+        switch (ranType)
+        {
+            case 0:
+            case 1:
+                ranType = 0; // Hammer
+                break;
+            case 2:
+            case 3:
+            case 4:
+                ranType = 1; // HandGun
+                break;
+            case 5:
+            case 6:
+            case 7:
+                ranType = 2; // ShotGun
+                break;
+            case 8:
+            case 9:
+                ranType = 3; // WildCard
+                break;
+        }
+        return ranType;
     }
 
     public void UseItem(int index)
     {
+        if (isOnline && ((!isP2 && turn % 2 == 1) || (isP2 && turn % 2 == 0))) return;
+
         if (isUsedItem || (turn % 2 == 1 && isAIBattle)) return;
         if (turn % 2 == 0 && player1_Items[index].isUsed) return;
         else if (turn % 2 == 1 && player2_Items[index].isUsed) return;
 
+        if (isOnline) PV.RPC("UseItemSub", RpcTarget.All, index);
+        else UseItemSub(index);
+    }
+
+    [PunRPC]
+    public void UseItemSub(int index)
+    {
         if (isUsingItem && curItemIndex != index)
         {
             isUsingItem = !isUsingItem;
@@ -285,12 +444,16 @@ public class GameManager : MonoBehaviour
         }
         isUsingItem = !isUsingItem;
         curItemIndex = index;
-        UIManager.uiManager.UsingItem(index, isUsingItem);
+        UIManager.uiManager.UsingItem(curItemIndex, isUsingItem);
         AudioManager.audioManager.PlaySFX(AudioManager.SFX.Item);
-        ClearFieldDecal();
+
+
+        if (isOnline) PV.RPC("ClearFieldDecal", RpcTarget.All);
+        else ClearFieldDecal();
     }
 
-    public void UsedItem(int curPlayer,int index)
+    [PunRPC]
+    public void UsedItem(int curPlayer, int index)
     {
         isUsedItem = true;
         if (turn % 2 == 0)
@@ -304,6 +467,13 @@ public class GameManager : MonoBehaviour
             --playerItemCount[1];
         }
         UIManager.uiManager.UsedItem(index);
+    }
+
+    [PunRPC]
+    public void OnAbility(int curPlayer, int index)
+    {
+        if (curPlayer == 0) player1_Items[curItemIndex].OnAbility(index);
+        else player2_Items[curItemIndex].OnAbility(index);
     }
 
     public void DestroyCircle(int index)
@@ -338,6 +508,7 @@ public class GameManager : MonoBehaviour
     void DecalField()
     {
         if (!isUsingItem) return;
+
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit))
@@ -356,45 +527,52 @@ public class GameManager : MonoBehaviour
                     index = floor.floorIndex;
                 }
 
-                if (curDecalIndex != index && curDecalIndex != -1) ClearFieldDecal();
-                curDecalIndex = index;
+                if (isOnline) PV.RPC("FillDecalFieled", RpcTarget.All, index);
+                else FillDecalFieled(index);
+            }
+        }
+    }
 
-                if (turn % 2 == 0)
-                {
-                    switch (player1_Items[curItemIndex].itemType)
-                    {
-                        case Item.Type.Hammer:
-                            HammerDecal(index);
-                            break;
-                        case Item.Type.HandGun:
-                            HandGunDecal();
-                            break;
-                        case Item.Type.Shotgun:
-                            ShotgunDecal(index);
-                            break;
-                        case Item.Type.WildCard:
-                            WildCardDecal(index);
-                            break;
-                    }
-                }
-                else
-                {
-                    switch (player2_Items[curItemIndex].itemType)
-                    {
-                        case Item.Type.Hammer:
-                            HammerDecal(index);
-                            break;
-                        case Item.Type.HandGun:
-                            HandGunDecal();
-                            break;
-                        case Item.Type.Shotgun:
-                            ShotgunDecal(index);
-                            break;
-                        case Item.Type.WildCard:
-                            WildCardDecal(index);
-                            break;
-                    }
-                }
+    [PunRPC]
+    public void FillDecalFieled(int index)
+    {
+        if (curDecalIndex != index && curDecalIndex != -1) ClearFieldDecal();
+        curDecalIndex = index;
+
+        if (turn % 2 == 0)
+        {
+            switch (player1_Items[curItemIndex].itemType)
+            {
+                case Item.Type.Hammer:
+                    HammerDecal(index);
+                    break;
+                case Item.Type.HandGun:
+                    HandGunDecal();
+                    break;
+                case Item.Type.Shotgun:
+                    ShotgunDecal(index);
+                    break;
+                case Item.Type.WildCard:
+                    WildCardDecal(index);
+                    break;
+            }
+        }
+        else
+        {
+            switch (player2_Items[curItemIndex].itemType)
+            {
+                case Item.Type.Hammer:
+                    HammerDecal(index);
+                    break;
+                case Item.Type.HandGun:
+                    HandGunDecal();
+                    break;
+                case Item.Type.Shotgun:
+                    ShotgunDecal(index);
+                    break;
+                case Item.Type.WildCard:
+                    WildCardDecal(index);
+                    break;
             }
         }
     }
@@ -463,7 +641,8 @@ public class GameManager : MonoBehaviour
         fieldColor.material.color = Color.blue;
     }
 
-    void ClearFieldDecal()
+    [PunRPC]
+    public void ClearFieldDecal()
     {
         foreach (Floor floor in floors)
         {
@@ -476,5 +655,17 @@ public class GameManager : MonoBehaviour
     {
         yield return startDelay;
         isPlaying = true;
+    }
+
+    public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    {
+        if (stream.IsWriting)
+        {
+            stream.SendNext(isUsingItem);
+        }
+        else
+        {
+            isUsingItem = (bool)stream.ReceiveNext();
+        }
     }
 }

@@ -1,12 +1,14 @@
+using Photon.Pun;
+using Photon.Realtime;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
-using static UnityEditor.FilePathAttribute;
 
 public class Item : MonoBehaviour
 {
+    public PhotonView PV;
     public enum Type { Default = -1, Hammer, HandGun, Shotgun, WildCard };
     public Type itemType;
     public GameManager gameManager;
@@ -14,7 +16,7 @@ public class Item : MonoBehaviour
     WaitForSeconds waitSecond = new WaitForSeconds(0.4f);
     WaitForSeconds handGunSecond = new WaitForSeconds(0.3f);
 
-    public void OnAblity(int location)
+    public void OnAbility(int location)
     {
         switch (itemType)
         {
@@ -60,6 +62,8 @@ public class Item : MonoBehaviour
 
     void HandGunAbility()
     {
+        if (GameManager.gameManager.GetP2()) return;
+
         int[] indexs = new int[5];
         for (int i = 0; i < 5; ++i)
         {
@@ -72,11 +76,21 @@ public class Item : MonoBehaviour
             }
             indexs.SetValue(index, i);
         }
+
+        if (GameManager.gameManager.GetOnline()) PV.RPC("HandGun", RpcTarget.All, indexs);
+        else HandGun(indexs);
+    }
+
+    [PunRPC]
+    public void HandGun(int[] indexs)
+    {
         StartCoroutine(HandGunCoroutine(indexs));
     }
 
     void ShotgunAbility(int location)
     {
+        if (GameManager.gameManager.GetP2()) return;
+
         int[] indexs = new int[3];
         for (int i = 0; i < 3; ++i)
         {
@@ -98,7 +112,16 @@ public class Item : MonoBehaviour
                 continue;
             }
             indexs.SetValue(index, i);
+        }
+        if (GameManager.gameManager.GetOnline()) PV.RPC("ShotGun", RpcTarget.All, indexs);
+        else ShotGun(indexs);
+    }
 
+    [PunRPC]
+    public void ShotGun(int[] indexs)
+    {
+        foreach (int index in indexs)
+        {
             if (index > -1 && index < 36 && gameManager.field[index] != 0)
             {
                 gameManager.DestroyCircle(index);
@@ -122,7 +145,8 @@ public class Item : MonoBehaviour
         GameManager.gameManager.floors[location].WildCardParticle();
     }
 
-    IEnumerator HandGunCoroutine(int[] indexs)
+    [PunRPC]
+    public IEnumerator HandGunCoroutine(int[] indexs)
     {
         gameManager.isUsingHandGun = true;
         foreach (int index in indexs)
