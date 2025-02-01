@@ -54,13 +54,14 @@ public class UIManager : MonoBehaviour
     public Text player1_name;
     public Text player2_name;
     public Button start_Button;
+    public Toggle canOnlineBacksise_Toggle;
+    bool isOnlineBacksise = false;
 
     public Button[] item_Buttons;
     public Image[] enemyItems;
     public Sprite[] itemSprite;
     public Button backsies_Button;
     public Image backsies;
-    bool isMine = false;
 
     public Text timeText;
     public Image playerColor;
@@ -426,23 +427,25 @@ public class UIManager : MonoBehaviour
     public void JoinRoom()
     {
         ActiveButtons(false);
+        error_Text.gameObject.SetActive(false);
         title_Text.text = "Join Room";
         room_Input.text = "";
-        error_Text.gameObject.SetActive(false);
         enter_Button.GetComponentInChildren<Text>().text = "Join";
-        room_Status.gameObject.SetActive(true);
         isCreateRoom = false;
+        room_Status.gameObject.SetActive(true);
+        canOnlineBacksise_Toggle.gameObject.SetActive(false);
     }
 
     public void CreateRoom()
     {
         ActiveButtons(false);
+        error_Text.gameObject.SetActive(false);
         title_Text.text = "Create Room";
         room_Input.text = "";
-        error_Text.gameObject.SetActive(false);
         enter_Button.GetComponentInChildren<Text>().text = "Create";
-        room_Status.gameObject.SetActive(true);
         isCreateRoom = true;
+        room_Status.gameObject.SetActive(true);
+        canOnlineBacksise_Toggle.gameObject.SetActive(true);
     }
 
     public void LeaveRoom()
@@ -472,7 +475,11 @@ public class UIManager : MonoBehaviour
         }
 
         network_Status.gameObject.SetActive(true);
-        if (isCreateRoom) NetworkManager.networkManager.CreateRoom();
+        if (isCreateRoom)
+        {
+            isOnlineBacksise = canOnlineBacksise_Toggle.isOn;
+            NetworkManager.networkManager.CreateRoom();
+        }
         else NetworkManager.networkManager.JoinRoom();
         AudioManager.audioManager.PlaySFX(AudioManager.SFX.Button);
     }
@@ -501,16 +508,21 @@ public class UIManager : MonoBehaviour
     {
         player1_name.text = p1;
         player2_name.text = p2;
-        if (isP2)
-        {
-            if (isMaster) return;
-            else start_Button.gameObject.SetActive(false);
-        }
-        else
+
+        if (!isP2)
         {
             isMaster = true;
             start_Button.gameObject.SetActive(true);
         }
+        else if (!isMaster) start_Button.gameObject.SetActive(false);
+        else PV.RPC("SetOnlineBacksies", RpcTarget.All, isOnlineBacksise);
+    }
+
+    [PunRPC]
+    public void SetOnlineBacksies(bool bOnlineBacksise)
+    {
+        isOnlineBacksise = bOnlineBacksise;
+        print("isOB: " + bOnlineBacksise);
     }
 
     public void LeaveButton()
@@ -542,6 +554,7 @@ public class UIManager : MonoBehaviour
     public void OnlineMode()
     {
         GameManager.gameManager.SetOnline(true);
+        GameManager.gameManager.SetCanBacksies(isOnlineBacksise);
     }
 
     [PunRPC]
@@ -588,26 +601,39 @@ public class UIManager : MonoBehaviour
 
     public void BacksiesButton()
     {
+        if ((GameManager.gameManager.turn % 2 == 0 && isMaster) ||
+           (GameManager.gameManager.turn % 2 == 1 && !isMaster)) return;
+        if (!GameManager.gameManager.GetOnline())
+        {
+            backsies.gameObject.SetActive(true);
+            backsies_Button.enabled = false;
+        }
+        else PV.RPC("OnlineBacksiesButton", RpcTarget.All);
+    }
+
+    [PunRPC]
+    public void OnlineBacksiesButton()
+    {
         backsies.gameObject.SetActive(true);
         backsies_Button.enabled = false;
-        if (GameManager.gameManager.GetOnline()) isMine = true;
     }
 
     public void YesButton()
     {
-        if (isMine) return;
+        if ((GameManager.gameManager.turn % 2 == 0 && !isMaster) ||
+            (GameManager.gameManager.turn % 2 == 1 && isMaster)) return;
         GameManager.gameManager.Backsies(true);
     }
 
     public void NoButton()
     {
-        if (isMine) return;
+        if ((GameManager.gameManager.turn % 2 == 0 && !isMaster) ||
+            (GameManager.gameManager.turn % 2 == 1 && isMaster)) return;
         GameManager.gameManager.Backsies(false);
     }
 
     public void EndBacksies()
     {
-        isMine = false;
         backsies.gameObject.SetActive(false);
         if (GameManager.gameManager.turn == 0) backsies_Button.enabled = false;
         else backsies_Button.enabled = true;
@@ -622,6 +648,9 @@ public class UIManager : MonoBehaviour
     {
         home_Button.gameObject.SetActive(true);
         messageBanner.gameObject.SetActive(true);
+
+        backsies_Button.gameObject.SetActive(false);
+        backsies.gameObject.SetActive(false);
         foreach (Button button in item_Buttons)
         {
             button.gameObject.SetActive(false);

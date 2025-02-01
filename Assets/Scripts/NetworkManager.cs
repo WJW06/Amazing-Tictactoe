@@ -13,6 +13,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public InputField name_Input;
     public InputField room_Input;
 
+
     void Awake() => networkManager = this;
 
     void Update()
@@ -66,7 +67,6 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         print("Leave Room");
         PhotonNetwork.LeaveRoom();
         UIManager.uiManager.LeaveRoom();
-        RoomRenewal();
     }
 
     public override void OnCreatedRoom()
@@ -124,6 +124,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         bool isP2 = false;
         if (PhotonNetwork.PlayerList.Length == 2)
         {
+            print("P2~~~");
             p2 = PhotonNetwork.PlayerList[1].NickName;
             isP2 = true;
         }

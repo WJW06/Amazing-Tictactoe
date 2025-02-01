@@ -62,6 +62,9 @@ MonoBehaviour:
   - ShotGun
   - UseItemSub
   - OnlineBacksies
+  - SetOnlineBacksies
+  - OnlineBacksiesButton
+  - SaveBack
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

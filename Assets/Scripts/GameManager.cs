@@ -198,7 +198,8 @@ public class GameManager : MonoBehaviour, IPunObservable
         }
     }
 
-    void SaveBack()
+    [PunRPC]
+    public void SaveBack()
     {
         if (isCanBacksies)
         {
@@ -240,7 +241,9 @@ public class GameManager : MonoBehaviour, IPunObservable
                 {
                     if (hit.transform.tag == "Floor")
                     {
-                        SaveBack();
+                        if (!isOnline) SaveBack();
+                        else PV.RPC("SaveBack", RpcTarget.All);
+
                         Floor floor = hit.transform.GetComponent<Floor>();
                         index = floor.floorIndex;
                         if (isOnline) PV.RPC("CreateCircle", RpcTarget.All, index, curPlayer);
@@ -251,7 +254,9 @@ public class GameManager : MonoBehaviour, IPunObservable
                 {
                     if (hit.transform.tag == "Floor" || hit.transform.tag == "Circle")
                     {
-                        SaveBack();
+                        if (!isOnline) SaveBack();
+                        else PV.RPC("SaveBack", RpcTarget.All);
+
                         if (hit.transform.tag == "Floor")
                         {
                             Floor floor = hit.transform.GetComponent<Floor>();
