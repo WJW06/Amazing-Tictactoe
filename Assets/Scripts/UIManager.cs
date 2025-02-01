@@ -36,6 +36,7 @@ public class UIManager : MonoBehaviour
     public Text name_Text;
     public InputField name_Input;
     string player_Name;
+    public Toggle canAIBacksies_Toggle;
 
     public Image network_Status;
     public bool isConnect = false;
@@ -57,12 +58,17 @@ public class UIManager : MonoBehaviour
     public Button[] item_Buttons;
     public Image[] enemyItems;
     public Sprite[] itemSprite;
-    public Image messageBanner;
-    public Text messageText;
+    public Button backsies_Button;
+    public Image backsies;
+    bool isMine = false;
+
     public Text timeText;
     public Image playerColor;
     Color player1_Color = new Color(255, 0, 0);
     Color player2_Color = new Color(0, 100, 255);
+
+    public Image messageBanner;
+    public Text messageText;
     public Button home_Button;
 
     float time;
@@ -108,6 +114,7 @@ public class UIManager : MonoBehaviour
         fourth_Button.gameObject.SetActive(false);
         name_Text.gameObject.SetActive(false);
         name_Input.gameObject.SetActive(false);
+        canAIBacksies_Toggle.gameObject.SetActive(false);
 
         first_Button.GetComponentInChildren<Text>().text = "Start";
         second_Button.GetComponentInChildren<Text>().text = "Setting";
@@ -123,6 +130,7 @@ public class UIManager : MonoBehaviour
         fifth_Button.gameObject.SetActive (false);
         name_Text.gameObject.SetActive(true);
         name_Input.gameObject.SetActive(true);
+        canAIBacksies_Toggle.gameObject.SetActive(true);
 
         first_Button.GetComponentInChildren<Text>().text = "P1 vs AI";
         second_Button.GetComponentInChildren<Text>().text = "P1 vs P2";
@@ -137,6 +145,7 @@ public class UIManager : MonoBehaviour
         fifth_Button.gameObject.SetActive(true);
         name_Text.gameObject.SetActive(false);
         name_Input.gameObject.SetActive(false);
+        canAIBacksies_Toggle.gameObject.SetActive(false);
         first_Button.GetComponentInChildren<Text>().fontSize = 26;
         second_Button.GetComponentInChildren<Text>().fontSize = 26;
 
@@ -381,6 +390,7 @@ public class UIManager : MonoBehaviour
     public void AIMode()
     {
         if (!CheckName()) return;
+        GameManager.gameManager.SetCanBacksies(canAIBacksies_Toggle.isOn);
         GameManager.gameManager.isAIBattle= true;
         GameStart();
     }
@@ -388,6 +398,7 @@ public class UIManager : MonoBehaviour
     public void BattleMode()
     {
         if (!CheckName()) return;
+        GameManager.gameManager.SetCanBacksies(true);
         GameManager.gameManager.isAIBattle = false;
         GameStart();
     }
@@ -432,6 +443,11 @@ public class UIManager : MonoBehaviour
         enter_Button.GetComponentInChildren<Text>().text = "Create";
         room_Status.gameObject.SetActive(true);
         isCreateRoom = true;
+    }
+
+    public void LeaveRoom()
+    {
+        isMaster = false;
     }
 
     public void CloseRoom(bool isCancle)
@@ -544,9 +560,12 @@ public class UIManager : MonoBehaviour
         third_Button.gameObject.SetActive(false);
         name_Text.gameObject.SetActive(false);
         name_Input.gameObject.SetActive(false);
+        canAIBacksies_Toggle.gameObject.SetActive(false);
 
         GameManager.gameManager.InitField();
         playGround.SetActive(true);
+        backsies_Button.gameObject.SetActive(GameManager.gameManager.GetCanBacksies());
+        backsies_Button.enabled = false;
         timeText.gameObject.SetActive(true);
         playerColor.gameObject.SetActive(true);
         time = 0;
@@ -565,6 +584,33 @@ public class UIManager : MonoBehaviour
         }
         
         ChangeUI(curPlayer);
+    }
+
+    public void BacksiesButton()
+    {
+        backsies.gameObject.SetActive(true);
+        backsies_Button.enabled = false;
+        if (GameManager.gameManager.GetOnline()) isMine = true;
+    }
+
+    public void YesButton()
+    {
+        if (isMine) return;
+        GameManager.gameManager.Backsies(true);
+    }
+
+    public void NoButton()
+    {
+        if (isMine) return;
+        GameManager.gameManager.Backsies(false);
+    }
+
+    public void EndBacksies()
+    {
+        isMine = false;
+        backsies.gameObject.SetActive(false);
+        if (GameManager.gameManager.turn == 0) backsies_Button.enabled = false;
+        else backsies_Button.enabled = true;
     }
 
     public void WinnerBanner(string winner)
@@ -629,6 +675,8 @@ public class UIManager : MonoBehaviour
 
     public void ChangeUI(int curPlayer)
     {
+        backsies_Button.enabled = true;
+
         if (curPlayer == 0) playerColor.color = player1_Color;
         else playerColor.color = player2_Color;
 

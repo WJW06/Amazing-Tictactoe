@@ -76,7 +76,7 @@ public class BattleAI : MonoBehaviour
         {
             RandomIndex();
         }
-        gameManager.CreateCircle(index);
+        gameManager.CreateCircle(index, 1);
     }
 
     void CountingPlayer1()

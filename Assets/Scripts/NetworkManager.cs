@@ -65,6 +65,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         print("Leave Room");
         PhotonNetwork.LeaveRoom();
+        UIManager.uiManager.LeaveRoom();
         RoomRenewal();
     }
 

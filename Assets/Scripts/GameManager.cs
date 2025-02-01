@@ -3,12 +3,51 @@ using Photon.Realtime;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Reflection;
 using Unity.VisualScripting;
 using UnityEngine;
 
+
 public class GameManager : MonoBehaviour, IPunObservable
 {
+    public class Backs
+    {
+        public int[] m_field;
+        public int m_P1Item_1;
+        public bool m_P1ItemUsed_1;
+        public int m_P1Item_2;
+        public bool m_P1ItemUsed_2;
+        public int m_P1Item_3;
+        public bool m_P1ItemUsed_3;
+        public int m_P2Item_1;
+        public bool m_P2ItemUsed_1;
+        public int m_P2Item_2;
+        public bool m_P2ItemUsed_2;
+        public int m_P2Item_3;
+        public bool m_P2ItemUsed_3;
+
+        public Backs(int[] field, int p1Item_1, bool p1ItemUsed_1,
+            int p1Item_2, bool p1ItemUsed_2, int p1Item_3, bool p1ItemUsed_3,
+            int p2Item_1, bool p2ItemUsed_1, int p2Item_2, bool p2ItemUsed_2,
+            int p2Item_3, bool p2ItemUsed_3)
+        {
+            m_field = (int[])field.Clone();
+            m_P1Item_1 = p1Item_1;
+            m_P1ItemUsed_1 = p1ItemUsed_1;
+            m_P1Item_2 = p1Item_2;
+            m_P1ItemUsed_2 = p1ItemUsed_2;
+            m_P1Item_3 = p1Item_3;
+            m_P1ItemUsed_3 = p1ItemUsed_3;
+            m_P2Item_1 = p2Item_1;
+            m_P2ItemUsed_1 = p2ItemUsed_1;
+            m_P2Item_2 = p2Item_2;
+            m_P2ItemUsed_2 = p2ItemUsed_2;
+            m_P2Item_3 = p2Item_3;
+            m_P2ItemUsed_3 = p2ItemUsed_3;
+        }
+    }
+
     public static GameManager gameManager;
     public PhotonView PV;
 
@@ -26,10 +65,13 @@ public class GameManager : MonoBehaviour, IPunObservable
     bool isUsingItem = false;
     bool isUsedItem = false;
     int curItemIndex;
-    int curDecalIndex = -1;
     int[] playerItemCount;
+    Stack<Backs> backs;
+    bool isBacksiesing = false;
+    int curDecalIndex = -1;
     public bool isUsingHandGun = false;
     bool isPlaying = false;
+    bool isCanBacksies = false;
     bool isOnline = false;
     bool isP2 = false;
     bool isSecondCreate = false;
@@ -45,6 +87,7 @@ public class GameManager : MonoBehaviour, IPunObservable
         playersCount = new int[2];
         playerItemCount = new int[2];
         itemsCount = new int[2];
+        backs = new Stack<Backs>();
 
         victoryCases = new int[,] {
             { 0, 1, 2, 3, 4, 5 },
@@ -68,7 +111,8 @@ public class GameManager : MonoBehaviour, IPunObservable
     {
         if (isPlaying)
         {
-            ClickFeild();
+            if (isOnline && ((!isP2 && turn % 2 == 1) || (isP2 && turn % 2 == 0))) return;
+            ClickField();
             DecalField();
         }
     }
@@ -85,6 +129,7 @@ public class GameManager : MonoBehaviour, IPunObservable
         playersCount[0] = 0;
         playersCount[1] = 0;
         isSecondCreate = false;
+        backs.Clear();
 
         if (isOnline)
         {
@@ -115,6 +160,16 @@ public class GameManager : MonoBehaviour, IPunObservable
         isPlaying = playing;
     }
 
+    public void SetCanBacksies(bool bCanBacksies)
+    {
+        isCanBacksies = bCanBacksies;
+    }
+
+    public bool GetCanBacksies()
+    {
+        return isCanBacksies;
+    }
+
     public void SetOnline(bool online)
     {
         isOnline = online;
@@ -135,12 +190,25 @@ public class GameManager : MonoBehaviour, IPunObservable
         return isP2;
     }
 
-
     public void ClearField()
     {
         foreach (Floor floor in floors)
         {
             floor.UnSetCircle();
+        }
+    }
+
+    void SaveBack()
+    {
+        if (isCanBacksies)
+        {
+            backs.Push(new Backs(field,
+                (int)player1_Items[0].itemType, player1_Items[0].isUsed,
+                (int)player1_Items[1].itemType, player1_Items[1].isUsed,
+                (int)player1_Items[2].itemType, player1_Items[2].isUsed,
+                (int)player2_Items[0].itemType, player2_Items[0].isUsed,
+                (int)player2_Items[1].itemType, player2_Items[1].isUsed,
+                (int)player2_Items[2].itemType, player2_Items[2].isUsed));
         }
     }
 
@@ -151,7 +219,7 @@ public class GameManager : MonoBehaviour, IPunObservable
         CancelInvoke("AIThink");
     }
 
-    void ClickFeild()
+    void ClickField()
     {
         if (isUsingHandGun) return;
         if (isAIBattle && turn % 2 == 1)
@@ -159,7 +227,6 @@ public class GameManager : MonoBehaviour, IPunObservable
             Invoke("AIThink", 0.5f);
             return;
         }
-        if (isOnline && ((!isP2 && turn % 2 == 1) || (isP2 && turn % 2 == 0))) return;
         if (Input.GetMouseButtonDown(0))
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -168,20 +235,23 @@ public class GameManager : MonoBehaviour, IPunObservable
             {
                 int curPlayer = turn % 2;
                 int index = -1;
-                if (!isUsingItem) // 아이템 사용 안할때
+
+                if (!isUsingItem) // 아이템 미사용
                 {
                     if (hit.transform.tag == "Floor")
                     {
+                        SaveBack();
                         Floor floor = hit.transform.GetComponent<Floor>();
                         index = floor.floorIndex;
-                        if (isOnline) PV.RPC("CreateCircle", RpcTarget.All, index);
-                        else CreateCircle(index);
+                        if (isOnline) PV.RPC("CreateCircle", RpcTarget.All, index, curPlayer);
+                        else CreateCircle(index, curPlayer);
                     }
                 }
-                else // 아이템 사용 할때
+                else // 아이템 사용
                 {
                     if (hit.transform.tag == "Floor" || hit.transform.tag == "Circle")
                     {
+                        SaveBack();
                         if (hit.transform.tag == "Floor")
                         {
                             Floor floor = hit.transform.GetComponent<Floor>();
@@ -215,11 +285,9 @@ public class GameManager : MonoBehaviour, IPunObservable
     }
 
     [PunRPC]
-    public void CreateCircle(int index)
+    public void CreateCircle(int index, int curPlayer)
     {
-        int curPlayer = turn % 2;
-
-        if (field[index] == 0)
+        if (field[index] == 0 || isBacksiesing)
         {
             floors[index].SetCircle(curPlayer);
             field[index] = curPlayer + 1;
@@ -233,13 +301,14 @@ public class GameManager : MonoBehaviour, IPunObservable
                 CheckVictory(curPlayer);
             }
 
-            if (isPlaying) ChangeTurn(curPlayer);
+            if (isPlaying && !isBacksiesing) ChangeTurn(curPlayer);
         }
     }
 
     [PunRPC]
     public void ChangeTurn(int curPlayer)
     {
+        ++turn;
         isUsedItem = false;
         UIManager.uiManager.ChangeUI(curPlayer);
 
@@ -278,8 +347,6 @@ public class GameManager : MonoBehaviour, IPunObservable
             AudioManager.audioManager.PlaySFX(AudioManager.SFX.Win);
             AudioManager.audioManager.PlayBGM(false);
         }
-
-        ++turn;
     }
 
     void CheckVictory(int curPlayer)
@@ -386,13 +453,17 @@ public class GameManager : MonoBehaviour, IPunObservable
             items[i].isUsed = false;
         }
 
-
         if (isSecondCreate) UIManager.uiManager.ShowItems(player);
         else if (player == 1)
         {
             UIManager.uiManager.ShowItems(player);
             isSecondCreate = true;
         }
+    }
+    
+    void BackItem(int player)
+    {
+
     }
 
     int RandomItemType(int type)
@@ -503,6 +574,85 @@ public class GameManager : MonoBehaviour, IPunObservable
             player2_Arr[index] = 1;
         }
         CheckVictory(curPlayer);
+    }
+
+    void SetBackState()
+    {
+        --turn;
+        field = backs.Peek().m_field;
+        player1_Items[0].itemType = (Item.Type)backs.Peek().m_P1Item_1;
+        player1_Items[0].isUsed = backs.Peek().m_P1ItemUsed_1;
+        player1_Items[1].itemType = (Item.Type)backs.Peek().m_P1Item_2;
+        player1_Items[1].isUsed = backs.Peek().m_P1ItemUsed_2;
+        player1_Items[2].itemType = (Item.Type)backs.Peek().m_P1Item_3;
+        player1_Items[2].isUsed = backs.Peek().m_P1ItemUsed_3;
+        player2_Items[0].itemType = (Item.Type)backs.Peek().m_P2Item_1;
+        player2_Items[0].isUsed = backs.Peek().m_P2ItemUsed_1;
+        player2_Items[1].itemType = (Item.Type)backs.Peek().m_P2Item_2;
+        player2_Items[1].isUsed = backs.Peek().m_P2ItemUsed_2;
+        player2_Items[2].itemType = (Item.Type)backs.Peek().m_P2Item_3;
+        player2_Items[2].isUsed = backs.Peek().m_P2ItemUsed_3;
+
+        SetBackView();
+    }
+
+    void SetBackView()
+    {
+        for (int i = 0; i < 36; ++i)
+        {
+            if (field[i] != 0)
+            {
+                if ((field[i] == 1 && player2_Arr[i] == 1) ||
+                    (field[i] == 2 && player1_Arr[i] == 1))
+                {
+                    ChangeCircle(i);
+                }
+                else if (field[i] == 1 && player1_Arr[i] == 0)
+                {
+                    CreateCircle(i, 0);
+                }
+                else if (field[i] == 2 && player2_Arr[i] == 0)
+                {
+                    CreateCircle(i, 1);
+                }
+            }
+            else DestroyCircle(i);
+        }
+
+        backs.Pop();
+        UIManager.uiManager.ChangeUI((turn - 1) % 2);
+    }
+
+    public void Backsies(bool isBacksies)
+    {
+        if (!isOnline)
+        {
+            isBacksiesing = isBacksies;
+            if (isBacksies)
+            {
+                if (isAIBattle)
+                {
+                    SetBackState();
+                    SetBackState();
+                }
+                else SetBackState();
+            }
+            UIManager.uiManager.EndBacksies();
+            isBacksiesing = false;
+        }
+        else PV.RPC("OnlineBacksies", RpcTarget.All, isBacksies);
+    }
+
+    [PunRPC]
+    public void OnlineBacksies(bool isBacksies)
+    {
+        isBacksiesing = isBacksies;
+        if (isBacksies)
+        {
+            SetBackState();
+        }
+        UIManager.uiManager.EndBacksies();
+        isBacksiesing = false;
     }
 
     void DecalField()
