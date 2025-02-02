@@ -13,6 +13,7 @@ public class BattleAI : MonoBehaviour
     int maxCount_Player2;
     int maxCase_Player1;
     int maxCase_Player2;
+    int canWin;
     int item_Index;
     int hammer_Index;
     int handGun_Index;
@@ -34,6 +35,12 @@ public class BattleAI : MonoBehaviour
         CountingPlayer2();
         CheckItems();
         FindItemIndex();
+
+        if (canWin != -1)
+        {
+            gameManager.CreateCircle(canWin, 1);
+            return;
+        }
 
         if (wildCard_Index != -1)
         {
@@ -104,8 +111,6 @@ public class BattleAI : MonoBehaviour
                 maxCase_Player1 = i;
             }
         }
-
-        if (maxCase_Player1 == -1) return;
     }
 
     void CountingPlayer2()
@@ -120,21 +125,21 @@ public class BattleAI : MonoBehaviour
                 if (gameManager.field[gameManager.victoryCases[i, j]] == 1)
                 {
                     count_Player2 = 0;
+                    canWin = -1;
                     break;
                 }
                 else if (gameManager.field[gameManager.victoryCases[i, j]] == 2)
-                {
                     ++count_Player2;
-                }
+                else if (gameManager.field[gameManager.victoryCases[i, j]] == 0)
+                    canWin = gameManager.victoryCases[i, j];
             }
             if (maxCount_Player2 < count_Player2)
             {
+                if (count_Player2 != 5) canWin = -1;
                 maxCount_Player2 = count_Player2;
                 maxCase_Player2 = i;
             }
         }
-
-        if (maxCase_Player2 == -1) return;
     }
 
     void CheckItems()

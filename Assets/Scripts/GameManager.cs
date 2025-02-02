@@ -302,10 +302,7 @@ public class GameManager : MonoBehaviour, IPunObservable
             AudioManager.audioManager.PlaySFX((AudioManager.SFX)curPlayer);
             ++playersCount[curPlayer];
 
-            if (playersCount[curPlayer] > 5)
-            {
-                CheckVictory(curPlayer);
-            }
+            if (playersCount[curPlayer] > 5) CheckVictory(curPlayer);
 
             if (isPlaying && !isBacksiesing) ChangeTurn(curPlayer);
         }
@@ -387,6 +384,7 @@ public class GameManager : MonoBehaviour, IPunObservable
     {
         bool victory = false;
         bool[] curArr = curPlayer == 0 ? player1_Arr : player2_Arr;
+
         for (int i = 0; i < 14; ++i)
         {
             for (int j = 0; j < 6; ++j)
@@ -398,21 +396,22 @@ public class GameManager : MonoBehaviour, IPunObservable
                     break;
                 }
             }
-            if (victory) break;
-        }
 
-        if (victory)
-        {
-            Debug.Log("플레이어" + curPlayer + " 승!");
-            if (isOnline)
+            if (victory)
             {
-                string winner = NetworkManager.networkManager.GetWinnerName(curPlayer);
-                UIManager.uiManager.GameEnd(winner);
-            }
-            else
-            {
-                if (curPlayer == 0) UIManager.uiManager.GameEnd(UIManager.uiManager.GetPlayerName() + " Win!");
-                else UIManager.uiManager.GameEnd("Player2 Win!");
+                Debug.Log("플레이어" + curPlayer + " 승!");
+                if (isOnline)
+                {
+                    string winner = NetworkManager.networkManager.GetWinnerName(curPlayer);
+                    UIManager.uiManager.GameEnd(winner);
+                }
+                else
+                {
+                    if (curPlayer == 0) UIManager.uiManager.GameEnd(UIManager.uiManager.GetPlayerName() + " Win!");
+                    else UIManager.uiManager.GameEnd("Player2 Win!");
+                }
+
+                return;
             }
         }
     }
@@ -607,7 +606,7 @@ public class GameManager : MonoBehaviour, IPunObservable
                 else if (field[i] == 1 && !player1_Arr[i])  CreateCircle(i, 0);
                 else if (field[i] == 2 && !player2_Arr[i])  CreateCircle(i, 1);
             }
-            else DestroyCircle(i);
+            else if (player1_Arr[i] || player2_Arr[i]) DestroyCircle(i);
         }
 
         backs.Pop();
