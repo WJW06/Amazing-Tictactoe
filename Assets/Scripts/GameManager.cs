@@ -322,20 +322,26 @@ public class GameManager : MonoBehaviour, IPunObservable
 
     public void ChangeCircle(int index, int curPlayer)
     {
-        Floor floor = floors[index];
-        floor.SetCircle(curPlayer);
-        field[index] = field[index] == 1 ? 2 : 1;
-        if (curPlayer == 0)
+        if (field[index] != 0)
         {
-            player1_Arr[index] = true;
-            player2_Arr[index] = false;
+            Floor floor = floors[index];
+            floor.SetCircle(curPlayer);
+
+            if (curPlayer == 0 && (field[index] == 2 || isBacksiesing))
+            {
+                field[index] = 1;
+                player1_Arr[index] = true;
+                player2_Arr[index] = false;
+            }
+            else if (curPlayer == 1 && (field[index] == 1 || isBacksiesing))
+            {
+                field[index] = 2;
+                player1_Arr[index] = false;
+                player2_Arr[index] = true;
+            }
+
+            CheckVictory(curPlayer);
         }
-        else
-        {
-            player1_Arr[index] = false;
-            player2_Arr[index] = true;
-        }
-        CheckVictory(curPlayer);
     }
 
     [PunRPC]
@@ -604,10 +610,10 @@ public class GameManager : MonoBehaviour, IPunObservable
         {
             if (field[i] != 0)
             {
-                if      (field[i] == 1 && player2_Arr[i])   ChangeCircle(i, 0);
-                else if (field[i] == 2 && player1_Arr[i])   ChangeCircle(i, 1);
-                else if (field[i] == 1 && !player1_Arr[i])  CreateCircle(i, 0);
-                else if (field[i] == 2 && !player2_Arr[i])  CreateCircle(i, 1);
+                if      (field[i] == 1 && (!player1_Arr[i] && !player2_Arr[i])) CreateCircle(i, 0);
+                else if (field[i] == 2 && (!player1_Arr[i] && !player2_Arr[i])) CreateCircle(i, 1);
+                else if (field[i] == 1 && (!player1_Arr[i] &&  player2_Arr[i])) ChangeCircle(i, 0);
+                else if (field[i] == 2 && ( player1_Arr[i] && !player2_Arr[i])) ChangeCircle(i, 1);
             }
             else if (player1_Arr[i] || player2_Arr[i]) DestroyCircle(i);
         }

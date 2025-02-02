@@ -133,9 +133,9 @@ public class BattleAI : MonoBehaviour
                 else if (gameManager.field[gameManager.victoryCases[i, j]] == 0)
                     canWin = gameManager.victoryCases[i, j];
             }
+            if (count_Player2 != 5) canWin = -1;
             if (maxCount_Player2 < count_Player2)
             {
-                if (count_Player2 != 5) canWin = -1;
                 maxCount_Player2 = count_Player2;
                 maxCase_Player2 = i;
             }
