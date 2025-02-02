@@ -14,6 +14,7 @@ public class GameManager : MonoBehaviour, IPunObservable
     public class Backs
     {
         public int[] m_field;
+        public int[] m_playersItemCount;
         public int m_P1Item_1;
         public bool m_P1ItemUsed_1;
         public int m_P1Item_2;
@@ -27,12 +28,13 @@ public class GameManager : MonoBehaviour, IPunObservable
         public int m_P2Item_3;
         public bool m_P2ItemUsed_3;
 
-        public Backs(int[] field, int p1Item_1, bool p1ItemUsed_1,
-            int p1Item_2, bool p1ItemUsed_2, int p1Item_3, bool p1ItemUsed_3,
-            int p2Item_1, bool p2ItemUsed_1, int p2Item_2, bool p2ItemUsed_2,
-            int p2Item_3, bool p2ItemUsed_3)
+        public Backs(int[] field, int[] playersItemCount,
+            int p1Item_1, bool p1ItemUsed_1, int p1Item_2, bool p1ItemUsed_2,
+            int p1Item_3, bool p1ItemUsed_3, int p2Item_1, bool p2ItemUsed_1,
+            int p2Item_2, bool p2ItemUsed_2, int p2Item_3, bool p2ItemUsed_3)
         {
             m_field = (int[])field.Clone();
+            m_playersItemCount = (int[])playersItemCount.Clone();
             m_P1Item_1 = p1Item_1;
             m_P1ItemUsed_1 = p1ItemUsed_1;
             m_P1Item_2 = p1Item_2;
@@ -65,7 +67,7 @@ public class GameManager : MonoBehaviour, IPunObservable
     bool isUsingItem = false;
     bool isUsedItem = false;
     int curItemIndex;
-    int[] playerItemCount;
+    int[] playersItemCount;
     Stack<Backs> backs;
     bool isBacksiesing = false;
     int curDecalIndex = -1;
@@ -85,7 +87,7 @@ public class GameManager : MonoBehaviour, IPunObservable
         player1_Arr = new bool[36];
         player2_Arr = new bool[36];
         playersCount = new int[2];
-        playerItemCount = new int[2];
+        playersItemCount = new int[2];
         itemsCount = new int[2];
         backs = new Stack<Backs>();
 
@@ -203,7 +205,7 @@ public class GameManager : MonoBehaviour, IPunObservable
     {
         if (isCanBacksies)
         {
-            backs.Push(new Backs(field,
+            backs.Push(new Backs(field, playersItemCount,
                 (int)player1_Items[0].itemType, player1_Items[0].isUsed,
                 (int)player1_Items[1].itemType, player1_Items[1].isUsed,
                 (int)player1_Items[2].itemType, player1_Items[2].isUsed,
@@ -343,7 +345,7 @@ public class GameManager : MonoBehaviour, IPunObservable
         isUsedItem = false;
         UIManager.uiManager.ChangeUI(curPlayer);
 
-        if (curPlayer == 0 && playerItemCount[0] == 0)
+        if (curPlayer == 0 && playersItemCount[0] == 0)
         {
             if (isOnline)
             {
@@ -356,7 +358,7 @@ public class GameManager : MonoBehaviour, IPunObservable
                 else --itemsCount[0];
             }
         }
-        else if (curPlayer == 1 && playerItemCount[1] == 0)
+        else if (curPlayer == 1 && playersItemCount[1] == 0)
         {
             if (isOnline)
             {
@@ -437,13 +439,13 @@ public class GameManager : MonoBehaviour, IPunObservable
         if (player == 0)
         {
             items = player1_Items;
-            playerItemCount[0] = 3;
+            playersItemCount[0] = 3;
             itemsCount[0] = 2;
         }
         else
         {
             items = player2_Items;
-            playerItemCount[1] = 3;
+            playersItemCount[1] = 3;
             itemsCount[1] = 2;
         }
 
@@ -468,13 +470,13 @@ public class GameManager : MonoBehaviour, IPunObservable
         if (player == 0)
         {
             items = player1_Items;
-            playerItemCount[0] = 3;
+            playersItemCount[0] = 3;
             itemsCount[0] = 2;
         }
         else
         {
             items = player2_Items;
-            playerItemCount[1] = 3;
+            playersItemCount[1] = 3;
             itemsCount[1] = 2;
         }
 
@@ -558,12 +560,12 @@ public class GameManager : MonoBehaviour, IPunObservable
         if (turn % 2 == 0)
         {
             player1_Items[index].isUsed = true;
-            --playerItemCount[0];
+            --playersItemCount[0];
         }
         else
         {
             player2_Items[index].isUsed = true;
-            --playerItemCount[1];
+            --playersItemCount[1];
         }
         UIManager.uiManager.UsedItem(index);
     }
@@ -579,6 +581,7 @@ public class GameManager : MonoBehaviour, IPunObservable
     {
         --turn;
         field = backs.Peek().m_field;
+        playersItemCount = backs.Peek().m_playersItemCount;
         player1_Items[0].itemType = (Item.Type)backs.Peek().m_P1Item_1;
         player1_Items[0].isUsed = backs.Peek().m_P1ItemUsed_1;
         player1_Items[1].itemType = (Item.Type)backs.Peek().m_P1Item_2;
