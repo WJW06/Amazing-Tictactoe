@@ -29,20 +29,11 @@ public class Floor : MonoBehaviour
         return (int)circle.circleType;
     }
 
-    public void HammerParticle()
-    {
-        StartCoroutine(HammerCoroutine());
-    }
+    public void HammerParticle() => StartCoroutine(HammerCoroutine());
 
-    public void ShotParticle()
-    {
-        StartCoroutine(ShotCoroutine());
-    }
+    public void ShotParticle() => StartCoroutine(ShotCoroutine());
 
-    public void WildCardParticle()
-    {
-        StartCoroutine(WildCardCoroutine());
-    }
+    public void WildCardParticle() => StartCoroutine(WildCardCoroutine());
 
     IEnumerator HammerCoroutine()
     {

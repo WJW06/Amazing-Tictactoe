@@ -601,8 +601,10 @@ public class UIManager : MonoBehaviour
 
     public void BacksiesButton()
     {
-        if ((GameManager.gameManager.turn % 2 == 0 && isMaster) ||
-           (GameManager.gameManager.turn % 2 == 1 && !isMaster)) return;
+        if (GameManager.gameManager.GetOnline() &&
+          ((GameManager.gameManager.turn % 2 == 0 && isMaster) ||
+           (GameManager.gameManager.turn % 2 == 1 && !isMaster))) return;
+
         if (!GameManager.gameManager.GetOnline())
         {
             backsies.gameObject.SetActive(true);
@@ -620,15 +622,17 @@ public class UIManager : MonoBehaviour
 
     public void YesButton()
     {
-        if ((GameManager.gameManager.turn % 2 == 0 && !isMaster) ||
-            (GameManager.gameManager.turn % 2 == 1 && isMaster)) return;
+        if (GameManager.gameManager.GetOnline() &&
+          ((GameManager.gameManager.turn % 2 == 0 && isMaster) ||
+           (GameManager.gameManager.turn % 2 == 1 && !isMaster))) return;
         GameManager.gameManager.Backsies(true);
     }
 
     public void NoButton()
     {
-        if ((GameManager.gameManager.turn % 2 == 0 && !isMaster) ||
-            (GameManager.gameManager.turn % 2 == 1 && isMaster)) return;
+        if (GameManager.gameManager.GetOnline() &&
+          ((GameManager.gameManager.turn % 2 == 0 && isMaster) ||
+           (GameManager.gameManager.turn % 2 == 1 && !isMaster))) return;
         GameManager.gameManager.Backsies(false);
     }
 
@@ -637,57 +641,6 @@ public class UIManager : MonoBehaviour
         backsies.gameObject.SetActive(false);
         if (GameManager.gameManager.turn == 0) backsies_Button.enabled = false;
         else backsies_Button.enabled = true;
-    }
-
-    public void WinnerBanner(string winner)
-    {
-        messageText.text = winner;
-    }
-
-    public void GameEnd(string winner)
-    {
-        home_Button.gameObject.SetActive(true);
-        messageBanner.gameObject.SetActive(true);
-
-        backsies_Button.gameObject.SetActive(false);
-        backsies.gameObject.SetActive(false);
-        foreach (Button button in item_Buttons)
-        {
-            button.gameObject.SetActive(false);
-        }
-        foreach (Image enemyItem in enemyItems)
-        {
-            enemyItem.gameObject.SetActive(false);
-        }
-
-        WinnerBanner(winner);
-        isPlaying = false;
-        GameManager.gameManager.SetPlaying(isPlaying);
-        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Win);
-        AudioManager.audioManager.PlayBGM(false);
-    }
-
-    public void HomeButton()
-    {
-        if (GameManager.gameManager.GetOnline())
-        {
-            NetworkManager.networkManager.OnDisconnected(DisconnectCause.SendException);
-        }
-        GameManager.gameManager.ClearField();
-        timeText.gameObject.SetActive(false);
-        home_Button.gameObject.SetActive(false);
-        playGround.SetActive(false);
-        playerColor.gameObject.SetActive(false);
-        messageBanner.gameObject.SetActive(false);
-        Situation0();
-        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Hammer);
-        AudioManager.audioManager.PlayBGM(true);
-        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Button);
-        if (GameManager.gameManager.GetOnline())
-        {
-            GameManager.gameManager.SetOnline(false);
-            PhotonNetwork.Disconnect();
-        }
     }
 
     public void SetItemImage(int curPlayer, int index)
@@ -768,5 +721,56 @@ public class UIManager : MonoBehaviour
     {
         Image item_Image = item_Buttons[index].GetComponentsInChildren<Image>()[1];
         item_Image.sprite = null;
+    }
+
+    public void WinnerBanner(string winner)
+    {
+        messageText.text = winner;
+    }
+
+    public void GameEnd(string winner)
+    {
+        home_Button.gameObject.SetActive(true);
+        messageBanner.gameObject.SetActive(true);
+
+        backsies_Button.gameObject.SetActive(false);
+        backsies.gameObject.SetActive(false);
+        foreach (Button button in item_Buttons)
+        {
+            button.gameObject.SetActive(false);
+        }
+        foreach (Image enemyItem in enemyItems)
+        {
+            enemyItem.gameObject.SetActive(false);
+        }
+
+        WinnerBanner(winner);
+        isPlaying = false;
+        GameManager.gameManager.SetPlaying(isPlaying);
+        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Win);
+        AudioManager.audioManager.PlayBGM(false);
+    }
+
+    public void HomeButton()
+    {
+        if (GameManager.gameManager.GetOnline())
+        {
+            NetworkManager.networkManager.OnDisconnected(DisconnectCause.SendException);
+        }
+        GameManager.gameManager.ClearField();
+        timeText.gameObject.SetActive(false);
+        home_Button.gameObject.SetActive(false);
+        playGround.SetActive(false);
+        playerColor.gameObject.SetActive(false);
+        messageBanner.gameObject.SetActive(false);
+        Situation0();
+        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Hammer);
+        AudioManager.audioManager.PlayBGM(true);
+        AudioManager.audioManager.PlaySFX(AudioManager.SFX.Button);
+        if (GameManager.gameManager.GetOnline())
+        {
+            GameManager.gameManager.SetOnline(false);
+            PhotonNetwork.Disconnect();
+        }
     }
 }

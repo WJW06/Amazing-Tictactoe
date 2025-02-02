@@ -139,7 +139,7 @@ public class Item : MonoBehaviour
     {
         if (gameManager.field[location] != 0)
         {
-            gameManager.ChangeCircle(location);
+            gameManager.ChangeCircle(location, gameManager.turn % 2);
         }
         AudioManager.audioManager.PlaySFX(AudioManager.SFX.WildCard);
         GameManager.gameManager.floors[location].WildCardParticle();

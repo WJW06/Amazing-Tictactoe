@@ -55,8 +55,8 @@ public class GameManager : MonoBehaviour, IPunObservable
     public int turn = 0;
     public Floor[] floors;
     public int[] field;
-    public int[] player1_Arr;
-    public int[] player2_Arr;
+    public bool[] player1_Arr;
+    public bool[] player2_Arr;
     public int[] playersCount;
     public int[] itemsCount;
     public int[,] victoryCases;
@@ -82,8 +82,8 @@ public class GameManager : MonoBehaviour, IPunObservable
         gameManager = this;
 
         field = new int[36];
-        player1_Arr = new int[36];
-        player2_Arr = new int[36];
+        player1_Arr = new bool[36];
+        player2_Arr = new bool[36];
         playersCount = new int[2];
         playerItemCount = new int[2];
         itemsCount = new int[2];
@@ -122,8 +122,8 @@ public class GameManager : MonoBehaviour, IPunObservable
         for (int i = 0; i < 36; ++i)
         {
             field[i] = 0;
-            player1_Arr[i] = 0;
-            player2_Arr[i] = 0;
+            player1_Arr[i] = false;
+            player2_Arr[i] = false;
         }
 
         playersCount[0] = 0;
@@ -216,6 +216,7 @@ public class GameManager : MonoBehaviour, IPunObservable
 
     void AIThink()
     {
+        SaveBack();
         BattleAI.battleAI.Think();
         CancelInvoke("AIThink");
     }
@@ -296,8 +297,8 @@ public class GameManager : MonoBehaviour, IPunObservable
         {
             floors[index].SetCircle(curPlayer);
             field[index] = curPlayer + 1;
-            if (curPlayer == 0) player1_Arr.SetValue(1, index);
-            else player2_Arr.SetValue(1, index);
+            if (curPlayer == 0) player1_Arr.SetValue(true, index);
+            else player2_Arr.SetValue(true, index);
             AudioManager.audioManager.PlaySFX((AudioManager.SFX)curPlayer);
             ++playersCount[curPlayer];
 
@@ -308,6 +309,34 @@ public class GameManager : MonoBehaviour, IPunObservable
 
             if (isPlaying && !isBacksiesing) ChangeTurn(curPlayer);
         }
+    }
+
+    public void DestroyCircle(int index)
+    {
+        Floor floor = floors[index];
+        int curPlayer = floor.UnSetCircle();
+        if (curPlayer == 0) player1_Arr[index] = false;
+        else player2_Arr[index] = false;
+        field[index] = 0;
+        --playersCount[curPlayer];
+    }
+
+    public void ChangeCircle(int index, int curPlayer)
+    {
+        Floor floor = floors[index];
+        floor.SetCircle(curPlayer);
+        field[index] = field[index] == 1 ? 2 : 1;
+        if (curPlayer == 0)
+        {
+            player1_Arr[index] = true;
+            player2_Arr[index] = false;
+        }
+        else
+        {
+            player1_Arr[index] = false;
+            player2_Arr[index] = true;
+        }
+        CheckVictory(curPlayer);
     }
 
     [PunRPC]
@@ -357,12 +386,12 @@ public class GameManager : MonoBehaviour, IPunObservable
     void CheckVictory(int curPlayer)
     {
         bool victory = false;
-        int[] curArr = curPlayer == 0 ? player1_Arr : player2_Arr;
+        bool[] curArr = curPlayer == 0 ? player1_Arr : player2_Arr;
         for (int i = 0; i < 14; ++i)
         {
             for (int j = 0; j < 6; ++j)
             {
-                if (curArr[victoryCases[i, j]] == 1) victory = true;
+                if (curArr[victoryCases[i, j]]) victory = true;
                 else
                 {
                     victory = false;
@@ -465,11 +494,6 @@ public class GameManager : MonoBehaviour, IPunObservable
             isSecondCreate = true;
         }
     }
-    
-    void BackItem(int player)
-    {
-
-    }
 
     int RandomItemType(int type)
     {
@@ -552,35 +576,6 @@ public class GameManager : MonoBehaviour, IPunObservable
         else player2_Items[curItemIndex].OnAbility(index);
     }
 
-    public void DestroyCircle(int index)
-    {
-        Floor floor = floors[index];
-        int curPlayer = floor.UnSetCircle();
-        if (curPlayer == 0) player1_Arr[index] = 0;
-        else player2_Arr[index] = 0;
-        field[index] = 0;
-        --playersCount[curPlayer];
-    }
-
-    public void ChangeCircle(int index)
-    {
-        Floor floor = floors[index];
-        int curPlayer = turn % 2;
-        floor.SetCircle(curPlayer);
-        field[index] = field[index] == 1 ? 2 : 1;
-        if (curPlayer == 0)
-        {
-            player1_Arr[index] = 1;
-            player2_Arr[index] = 0;
-        }
-        else
-        {
-            player1_Arr[index] = 0;
-            player2_Arr[index] = 1;
-        }
-        CheckVictory(curPlayer);
-    }
-
     void SetBackState()
     {
         --turn;
@@ -607,19 +602,10 @@ public class GameManager : MonoBehaviour, IPunObservable
         {
             if (field[i] != 0)
             {
-                if ((field[i] == 1 && player2_Arr[i] == 1) ||
-                    (field[i] == 2 && player1_Arr[i] == 1))
-                {
-                    ChangeCircle(i);
-                }
-                else if (field[i] == 1 && player1_Arr[i] == 0)
-                {
-                    CreateCircle(i, 0);
-                }
-                else if (field[i] == 2 && player2_Arr[i] == 0)
-                {
-                    CreateCircle(i, 1);
-                }
+                if      (field[i] == 1 && player2_Arr[i])   ChangeCircle(i, 0);
+                else if (field[i] == 2 && player1_Arr[i])   ChangeCircle(i, 1);
+                else if (field[i] == 1 && !player1_Arr[i])  CreateCircle(i, 0);
+                else if (field[i] == 2 && !player2_Arr[i])  CreateCircle(i, 1);
             }
             else DestroyCircle(i);
         }

@@ -33,7 +33,7 @@ public class AudioManager : MonoBehaviour
         Lose
     }
 
-    private void Awake()
+    void Awake()
     {
         audioManager = this;
         bgmVolume = PlayerPrefs.HasKey("BGM") ? PlayerPrefs.GetFloat("BGM") / 10 : 1;
