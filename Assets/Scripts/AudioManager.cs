@@ -36,8 +36,8 @@ public class AudioManager : MonoBehaviour
     void Awake()
     {
         audioManager = this;
-        bgmVolume = PlayerPrefs.HasKey("BGM") ? PlayerPrefs.GetFloat("BGM") / 10 : 1;
-        sfxVolume = PlayerPrefs.HasKey("SFX") ? PlayerPrefs.GetFloat("SFX") / 10 : 1;
+        bgmVolume = PlayerPrefs.HasKey("BGM") ? PlayerPrefs.GetFloat("BGM") / 5 : 1;
+        sfxVolume = PlayerPrefs.HasKey("SFX") ? PlayerPrefs.GetFloat("SFX") / 5 : 1;
         Init();
     }   
 

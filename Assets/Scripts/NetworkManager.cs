@@ -124,7 +124,6 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         bool isP2 = false;
         if (PhotonNetwork.PlayerList.Length == 2)
         {
-            print("P2~~~");
             p2 = PhotonNetwork.PlayerList[1].NickName;
             isP2 = true;
         }

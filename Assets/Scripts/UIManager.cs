@@ -16,7 +16,8 @@ public class UIManager : MonoBehaviour
 
     public GameObject playGround;
 
-    public Text logo;
+    public Text a_logo;
+    public Text t_logo;
     public Button first_Button;
     public Button second_Button;
     public Button third_Button;
@@ -108,7 +109,8 @@ public class UIManager : MonoBehaviour
     void Situation0()
     {
         situation = 0;
-        logo.gameObject.SetActive(true);
+        a_logo.gameObject.SetActive(true);
+        t_logo.gameObject.SetActive(true);
         first_Button.gameObject.SetActive(true);
         second_Button.gameObject.SetActive(true);
         third_Button.gameObject.SetActive(true);
@@ -125,7 +127,8 @@ public class UIManager : MonoBehaviour
     void Situation1()
     {
         situation = 1;
-        logo.gameObject.SetActive(false);
+        a_logo.gameObject.SetActive(false);
+        t_logo.gameObject.SetActive(false);
         third_Button.gameObject.SetActive(true);
         fourth_Button.gameObject.SetActive(true);
         fifth_Button.gameObject.SetActive (false);
@@ -232,7 +235,8 @@ public class UIManager : MonoBehaviour
 
     public void SettingButton()
     {
-        logo.gameObject.SetActive(false);
+        a_logo.gameObject.SetActive(false);
+        t_logo.gameObject.SetActive(false);
         MainButtons(true);
 
         setting_Interface.SetActive(true);
@@ -324,7 +328,8 @@ public class UIManager : MonoBehaviour
     public void CancleButton()
     {
         setting_Interface.SetActive(false);
-        logo.gameObject.SetActive(true);
+        a_logo.gameObject.SetActive(true);
+        t_logo.gameObject.SetActive(true);
         MainButtons(true);
 
         isFullScreen = temp_Setting[0] == 1 ? true : false;
@@ -337,7 +342,8 @@ public class UIManager : MonoBehaviour
     public void ConfirmButton()
     {
         setting_Interface.SetActive(false);
-        logo.gameObject.SetActive(true);
+        a_logo.gameObject.SetActive(true);
+        t_logo.gameObject.SetActive(true);
         MainButtons(true);
 
         PlayerPrefs.SetInt("FullScreen", isFullScreen == true ? 1 : 0);
@@ -665,6 +671,7 @@ public class UIManager : MonoBehaviour
         for (int i = 0; i < 3; ++i)
         {
             Item player = curPlayer == 0 ? GameManager.gameManager.player2_Items[i] : GameManager.gameManager.player1_Items[i];
+
             if (player.isUsed)
             {
                 Image item_Image = item_Buttons[i].GetComponentsInChildren<Image>()[1];
@@ -676,7 +683,9 @@ public class UIManager : MonoBehaviour
                 Image buttonImg = item_Buttons[i].GetComponentsInChildren<Image>()[1];
                 buttonImg.sprite = itemSprite[itemType];
             }
+
             Item enemy = curPlayer == 0 ? GameManager.gameManager.player1_Items[i] : GameManager.gameManager.player2_Items[i];
+
             if (enemy.isUsed)
             {
                 Image buttonImg = enemyItems[i].GetComponentsInChildren<Image>()[1];
